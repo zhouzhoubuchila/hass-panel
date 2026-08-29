@@ -1,0 +1,8 @@
+.home-os-family-schedule > div { display:grid;gap:7px; }
+.home-os-family-schedule > div > span { display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--home-os-surface-muted); }
+.home-os-family-schedule time { color:var(--home-os-accent);font-size:9px; }
+.home-os-family-schedule b { overflow:hidden;text-overflow:ellipsis;font-size:9px;white-space:nowrap; }
+.home-os-family-schedule small { color:var(--color-text-light);font-size:8px; }
+.home-os-family-schedule .is-active { background:rgba(85,185,131,.11); }
+.home-os-family-schedule footer { display:flex;align-items:center;gap:6px;margin-top:13px;padding-top:10px;border-top:1px solid var(--color-border);color:var(--color-text-light);font-size:9px; }
+
