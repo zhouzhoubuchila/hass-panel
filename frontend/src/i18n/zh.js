@@ -850,7 +850,8 @@ export const zh = {
       success: '登录成功',
       failed: '登录失败',
       error: '登录失败',
-      rememberPassword: '记住密码'
+      rememberPassword: '记住密码',
+      rememberUsername: '记住用户名'
     },
     initialize: {
       title: '系统初始化',

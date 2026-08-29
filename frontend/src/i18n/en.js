@@ -834,6 +834,7 @@ export const en = {
         failed: 'Login failed',
         error: 'Login failed ',
         rememberPassword: 'Remember password',
+        rememberUsername: 'Remember username',
     },
     initialize: {
         title: 'System Initialization',
