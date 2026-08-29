@@ -1,0 +1,19 @@
+import React from 'react';
+import { BatteryLow, Camera, DoorOpen, Home, PackageOpen, Radar, Users, WashingMachine } from 'lucide-react';
+import { useLanguage } from '../../i18n/LanguageContext';
+import useFamilyDashboard from '../family/useFamilyDashboard';
+import '../styles/family.css';
+
+const Empty = ({ children }) => <p className="home-os-family-empty">{children}</p>;
+export default function FamilyPage() {
+  const { language } = useLanguage(); const model = useFamilyDashboard();
+  return <section className="home-os-family-page"><header className="home-os-page-heading"><span>{language === 'zh' ? '家庭与安防' : 'Family & security'}</span><h1>{language === 'zh' ? '家里现在' : 'At home now'}</h1><p>{model.alerts ? (language === 'zh' ? `${model.alerts} 项状态需要留意` : `${model.alerts} items need attention`) : (language === 'zh' ? '家庭状态正常' : 'Household status normal')}</p></header><div className="home-os-family-grid">
+    <article className="home-os-family-card home-os-family-people"><h2><Users size={18} />{language === 'zh' ? '家庭成员' : 'People'}</h2>{model.people.length ? <div>{model.people.map((p) => <span className={p.home ? 'is-home' : ''} key={p.id}><i>{p.name.slice(0, 1)}</i><b>{p.name}</b><small>{p.home ? (language === 'zh' ? '在家' : 'Home') : p.state}</small></span>)}</div> : <Empty>{language === 'zh' ? '没有 person 实体' : 'No person entities'}</Empty>}</article>
+    <article className="home-os-family-card"><h2><DoorOpen size={18} />{language === 'zh' ? '门窗' : 'Openings'}</h2><div className="home-os-family-list">{model.openings.length ? model.openings.map((x) => <span className={x.open ? 'is-alert' : ''} key={x.id}><b>{x.name}</b><small>{x.open ? (language === 'zh' ? '未关闭' : 'Open') : (language === 'zh' ? '已关闭' : 'Closed')}</small></span>) : <Empty>{language === 'zh' ? '没有门窗实体' : 'No opening entities'}</Empty>}</div></article>
+    <article className="home-os-family-card"><h2><Radar size={18} />Presence</h2><div className="home-os-family-list">{model.presence.length ? model.presence.map((x) => <span className={x.active ? 'is-active' : ''} key={x.id}><b>{x.name}</b><small>{x.active ? (language === 'zh' ? '检测到活动' : 'Detected') : (language === 'zh' ? '无人' : 'Clear')}</small></span>) : <Empty>{language === 'zh' ? '没有存在传感器' : 'No presence sensors'}</Empty>}</div></article>
+    <article className="home-os-family-card"><h2><Camera size={18} />{language === 'zh' ? '摄像头' : 'Cameras'}</h2><div className="home-os-family-list">{model.cameras.length ? model.cameras.map((x) => <span key={x.id}><b>{x.name}</b><small>{x.available ? (language === 'zh' ? '在线' : 'Online') : (language === 'zh' ? '不可用' : 'Unavailable')}</small></span>) : <Empty>{language === 'zh' ? '没有摄像头实体' : 'No camera entities'}</Empty>}</div></article>
+    <article className="home-os-family-card"><h2><WashingMachine size={18} />{language === 'zh' ? '家电' : 'Appliances'}</h2><div className="home-os-family-list">{model.appliances.slice(0, 8).map((x) => <span className={x.active ? 'is-active' : ''} key={x.id}><b>{x.name}</b><small>{x.state}</small></span>)}</div></article>
+    <article className="home-os-family-card"><h2><BatteryLow size={18} />{language === 'zh' ? '电量与耗材' : 'Battery & supplies'}</h2><div className="home-os-resource-list">{[...model.batteries.slice(0, 5), ...model.consumables.slice(0, 5)].map((x) => <span key={x.id}><b>{x.name}<small>{x.value}%</small></b><i><em style={{ width: `${Math.max(0, Math.min(100, x.value))}%` }} /></i></span>)}</div>{!model.batteries.length && !model.consumables.length && <Empty>{language === 'zh' ? '没有电量或耗材实体' : 'No battery or supply entities'}</Empty>}</article>
+  </div><div className="home-os-family-footnote"><Home size={14} /><PackageOpen size={14} />{language === 'zh' ? '仅展示 Home Assistant 当前实时状态' : 'Showing current Home Assistant state only'}</div></section>;
+}
+
