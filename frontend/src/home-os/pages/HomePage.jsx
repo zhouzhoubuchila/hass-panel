@@ -4,6 +4,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import FloorplanPlaceholder from '../floorplan/FloorplanPlaceholder';
 import useHomeDashboard from '../data/useHomeDashboard';
 import { getTravelAdvice } from '../data/dashboardModel';
+import HomeModeBar from '../components/HomeModeBar';
 
 const weatherNames = { sunny: ['晴', 'Sunny'], cloudy: ['多云', 'Cloudy'], partlycloudy: ['局部多云', 'Partly cloudy'], rainy: ['有雨', 'Rainy'], 'clear-night': ['晴夜', 'Clear night'], fog: ['有雾', 'Foggy'], windy: ['有风', 'Windy'], lightning: ['雷雨', 'Thunderstorm'], snowy: ['有雪', 'Snowy'] };
 const moonIcons = { new_moon: '●', waxing_crescent: '◔', first_quarter: '◑', waxing_gibbous: '◕', full_moon: '○', waning_gibbous: '◕', last_quarter: '◐', waning_crescent: '◔' };
@@ -22,6 +23,7 @@ export default function HomePage() {
       <div><span>{now.toLocaleDateString(locale, { month: 'long', day: 'numeric', weekday: 'long' })}</span><h1>{now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}</h1><p className="home-os-daily-summary">{summary}</p></div>
       <div className={`home-os-connection ${dashboard.ready ? 'is-ready' : 'is-waiting'}`}><span /><div><strong>{dashboard.ready ? (language === 'zh' ? 'Home Assistant 已连接' : 'Home Assistant connected') : (language === 'zh' ? '正在连接 Home Assistant' : 'Connecting to Home Assistant')}</strong><small>{language === 'zh' ? '实体状态实时同步' : 'Entity states update live'}</small></div></div>
     </section>
+    <HomeModeBar config={dashboard.config} />
     <div className="home-os-home-grid">
       <FloorplanPlaceholder config={dashboard.config?.homeOs?.floorplan} />
       <aside className="home-os-summary-rail">
@@ -41,4 +43,3 @@ export default function HomePage() {
     </div>
   </div>;
 }
-
