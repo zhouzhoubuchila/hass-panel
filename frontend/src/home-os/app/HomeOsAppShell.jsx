@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Languages, LayoutDashboard, Map, Moon, Settings, SlidersHorizontal, Sun } from 'lucide-react';
+import { Languages, LayoutDashboard, Map, Moon, Search, Settings, SlidersHorizontal, Sun } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useHass } from '@hakit/core';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -7,10 +7,12 @@ import { useTheme } from '../../theme/ThemeContext';
 import { primaryNavigation } from './navigation';
 import HomeOsRoutes from './HomeOsRoutes';
 import HomeOsErrorBoundary from './HomeOsErrorBoundary';
+import CommandPalette from '../components/CommandPalette';
 import '../styles/home-os.css';
 
 export default function HomeOsAppShell() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
   const { language, toggleLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { pathname } = useLocation();
@@ -49,6 +51,7 @@ export default function HomeOsAppShell() {
           <header className="home-os-topbar">
             <div><span className="home-os-eyebrow">HOME ASSISTANT</span><strong>{language === 'zh' ? '家里，一切尽在掌握' : 'Everything at home, at a glance'}</strong></div>
             <div className="home-os-actions">
+              <button type="button" onClick={() => setCommandOpen(true)} aria-label={language === 'zh' ? '全局搜索' : 'Global search'}><Search size={18} /></button>
               <button type="button" onClick={toggleLanguage} aria-label={language === 'zh' ? '切换语言' : 'Switch language'}><Languages size={18} /></button>
               <button type="button" onClick={toggleTheme} aria-label={language === 'zh' ? '切换主题' : 'Switch theme'}>{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
             </div>
@@ -66,6 +69,7 @@ export default function HomeOsAppShell() {
           ))}
         </nav>
       )}
+      <CommandPalette open={commandOpen} setOpen={setCommandOpen} />
     </div>
   );
 }
