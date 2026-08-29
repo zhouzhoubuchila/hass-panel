@@ -6,7 +6,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { buildFloorplanState, deviceForObject, entityForObject, roomForObject } from './floorplanBinding';
 import { createProceduralDPlan } from './proceduralDPlan';
 
-export default function ThreeFloorplan({ config }) {
+export default function ThreeFloorplan({ config, onUse2D }) {
   const containerRef = useRef(null);
   const runtimeRef = useRef(null);
   const { callService, useStore } = useHass();
@@ -171,10 +171,11 @@ export default function ThreeFloorplan({ config }) {
     {status !== 'ready' && <div className="home-os-three-status"><strong>{status === 'error' ? (language === 'zh' ? '模型加载失败' : 'Model failed to load') : (language === 'zh' ? '正在加载 3D 户型' : 'Loading 3D floorplan')}</strong><small>{status === 'error' ? config.modelUrl : 'GLB / GLTF'}</small></div>}
     <div className="home-os-floorplan-readouts">
       <button type="button" onClick={() => navigate('/floorplan-settings')}><Settings2 size={14} />{language === 'zh' ? '实体映射' : 'Map entities'}</button>
+      <button type="button" onClick={onUse2D}>2D</button>
       {floorplanState.rooms.slice(0, 3).map((room) => <div key={room.id}><strong>{room.name}</strong><span><Thermometer size={13} />{room.temperature ?? '—'}°</span><span><Droplets size={13} />{room.humidity ?? '—'}%</span></div>)}
       {floorplanState.lights.slice(0, 3).map((light) => <button type="button" disabled={!light.available} onClick={() => callService({ domain: 'light', service: 'toggle', target: { entity_id: light.entityId } })} key={light.entityId}><Lightbulb size={14} />{light.entityId.split('.').pop()}<i className={light.isOn ? 'is-on' : ''} /></button>)}
     </div>
-    {floorplanState.alerts.length > 0 && <div className="home-os-floorplan-alert"><AlertTriangle size={13} />{language === 'zh' ? `${floorplanState.alerts.length} 个设备异常` : `${floorplanState.alerts.length} device alerts`}</div>}
+    {floorplanState.alerts.length > 0 && <button type="button" className="home-os-floorplan-alert" onClick={() => setSelectedRoomId(floorplanState.alerts[0].roomId)}><AlertTriangle size={13} />{language === 'zh' ? `${floorplanState.alerts.length} 个设备异常` : `${floorplanState.alerts.length} device alerts`}</button>}
     {selectedRoom && <aside className="home-os-room-focus"><button type="button" className="home-os-room-close" onClick={() => setSelectedRoomId(null)}><X size={13} /></button><strong>{selectedRoom.name}</strong><span>{selectedRoom.temperature ?? '—'}° · {selectedRoom.humidity ?? '—'}%</span><small>{selectedRoom.presence === null ? (language === 'zh' ? '未发现人体传感器' : 'No presence sensor') : selectedRoom.presence ? (language === 'zh' ? '有人活动' : 'Occupied') : (language === 'zh' ? '无人活动' : 'Clear')}</small><div className="home-os-room-devices">{selectedDevices.map((device) => <button type="button" disabled={!device.available || device.type === 'presence'} className={device.active ? 'is-active' : ''} onClick={() => controlDevice(device)} key={device.type}>{device.type === 'climate' ? <AirVent size={13} /> : device.type === 'media' ? <Radio size={13} /> : <CircleDot size={13} />}{device.type}</button>)}</div></aside>}
     <span className="home-os-floorplan-badge">{config.modelUrl ? 'FLOORPLAN' : 'D · 99.91 M²'} · LIVE</span>
   </section>;
