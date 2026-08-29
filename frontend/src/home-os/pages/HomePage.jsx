@@ -23,7 +23,7 @@ export default function HomePage() {
       <div className={`home-os-connection ${dashboard.ready ? 'is-ready' : 'is-waiting'}`}><span /><div><strong>{dashboard.ready ? (language === 'zh' ? 'Home Assistant 已连接' : 'Home Assistant connected') : (language === 'zh' ? '正在连接 Home Assistant' : 'Connecting to Home Assistant')}</strong><small>{language === 'zh' ? '实体状态实时同步' : 'Entity states update live'}</small></div></div>
     </section>
     <div className="home-os-home-grid">
-      <FloorplanPlaceholder />
+      <FloorplanPlaceholder config={dashboard.config?.homeOs?.floorplan} />
       <aside className="home-os-summary-rail">
         <section className={`home-os-panel home-os-attention ${dashboard.attention.length ? 'has-items' : 'is-clear'}`}>
           <div className="home-os-panel-title"><span>{dashboard.attention.length ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}{language === 'zh' ? '需要你处理' : 'Needs attention'}</span><b>{dashboard.attention.length}</b></div>
@@ -41,3 +41,4 @@ export default function HomePage() {
     </div>
   </div>;
 }
+
