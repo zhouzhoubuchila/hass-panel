@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Languages, LayoutDashboard, Moon, Settings, Sun } from 'lucide-react';
+import { Languages, LayoutDashboard, Map, Moon, Settings, Sun } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useHass } from '@hakit/core';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -37,6 +37,7 @@ export default function HomeOsAppShell() {
           ))}
         </nav>
         <div className="home-os-sidebar-footer">
+          <NavLink to="/floorplan-settings" className="home-os-nav-link"><Map size={18} /><span>{language === 'zh' ? '户型映射' : 'Floorplan'}</span></NavLink>
           <NavLink to="/legacy" className="home-os-nav-link"><LayoutDashboard size={18} /><span>{language === 'zh' ? '原面板' : 'Legacy'}</span></NavLink>
           <NavLink to="/config" className="home-os-nav-link"><Settings size={18} /><span>{language === 'zh' ? '设置' : 'Settings'}</span></NavLink>
         </div>
