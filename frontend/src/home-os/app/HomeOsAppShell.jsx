@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Languages, LayoutDashboard, Moon, Settings, Sun } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useHass } from '@hakit/core';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { primaryNavigation } from './navigation';
 import HomeOsRoutes from './HomeOsRoutes';
+import HomeOsErrorBoundary from './HomeOsErrorBoundary';
 import '../styles/home-os.css';
 
 export default function HomeOsAppShell() {
@@ -12,12 +14,16 @@ export default function HomeOsAppShell() {
   const { language, toggleLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { pathname } = useLocation();
+  const { useStore } = useHass();
+  const ready = useStore((state) => state.ready);
+  const kiosk = new URLSearchParams(window.location.search).get('kiosk') === '1' || localStorage.getItem('home_os_kiosk') === 'true';
   const isUtilityPage = pathname === '/legacy' || pathname === '/config';
 
   const nav = primaryNavigation.map((item) => ({ ...item, text: item.label[language] || item.label.zh }));
 
   return (
-    <div className={`home-os-shell ${isUtilityPage ? 'home-os-shell--utility' : ''}`}>
+    <div className={`home-os-shell ${isUtilityPage ? 'home-os-shell--utility' : ''} ${kiosk ? 'home-os-shell--kiosk' : ''}`}>
+      {!ready && <div className="home-os-offline-banner">{language === 'zh' ? '正在等待 Home Assistant 实时连接…' : 'Waiting for the Home Assistant live connection…'}</div>}
       <aside className="home-os-sidebar" aria-label={language === 'zh' ? '主导航' : 'Primary navigation'}>
         <NavLink to="/" className="home-os-brand" aria-label="Home OS">
           <span className="home-os-brand-mark">H</span>
@@ -46,7 +52,7 @@ export default function HomeOsAppShell() {
             </div>
           </header>
         )}
-        <main className="home-os-main"><HomeOsRoutes sidebarVisible={sidebarVisible} setSidebarVisible={setSidebarVisible} /></main>
+        <main className="home-os-main"><HomeOsErrorBoundary language={language}><HomeOsRoutes sidebarVisible={sidebarVisible} setSidebarVisible={setSidebarVisible} /></HomeOsErrorBoundary></main>
       </div>
 
       {!isUtilityPage && (
@@ -61,3 +67,4 @@ export default function HomeOsAppShell() {
     </div>
   );
 }
+
