@@ -1,4 +1,4 @@
-import { buildFloorplanState, discoverRoomBindings, entityForObject, roomForObject } from './floorplanBinding';
+import { buildFloorplanState, deviceForObject, discoverRoomBindings, entityForObject, roomForObject } from './floorplanBinding';
 
 test('maps HA entity state without coupling it to the renderer', () => {
   const state = buildFloorplanState({ rooms: [{ id: 'living', temperature: 'sensor.temp', humidity: 'sensor.humidity' }], lights: [{ entityId: 'light.ceiling', objectNames: ['CeilingLamp'] }] }, {
@@ -21,5 +21,22 @@ test('discovers only room-specific entities and resolves room clicks', () => {
   expect(state.rooms[0].temperature).toBe(26.4);
   expect(state.lights[0].entityId).toBe('light.living');
   expect(roomForObject({ name: 'Room_living', userData: {}, parent: null }, state.rooms)?.id).toBe('living');
+});
+
+test('maps interactive room devices without exposing unavailable controls', () => {
+  const room = { id: 'living', aliases: ['客厅'], objectNames: ['Room_living'], curtain: 'cover.living' };
+  const state = buildFloorplanState({ rooms: [room] }, {
+    'cover.living': { entity_id: 'cover.living', state: 'open', attributes: { friendly_name: '客厅窗帘' } },
+  });
+  expect(state.rooms[0].devices[0]).toMatchObject({ type: 'curtain', active: true, available: true });
+  expect(deviceForObject({ userData: { roomId: 'living', deviceType: 'curtain' }, parent: null }, state.rooms)?.entityId).toBe('cover.living');
+});
+
+test('discovers a whole-home vacuum and promotes failures to alerts', () => {
+  const state = buildFloorplanState({ rooms: [] }, {
+    'vacuum.dreame': { entity_id: 'vacuum.dreame', state: 'error', attributes: { friendly_name: '追觅扫地机器人' } },
+  });
+  expect(state.vacuum).toMatchObject({ entityId: 'vacuum.dreame', error: true });
+  expect(state.alerts).toHaveLength(1);
 });
 
