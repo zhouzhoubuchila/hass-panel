@@ -1,4 +1,4 @@
-import { createRoomMappings, getEntityOptions, mergeFloorplanConfig } from './floorplanSettingsModel';
+import { createGlobalMappings, createRoomMappings, getEntityOptions, mergeFloorplanConfig } from './floorplanSettingsModel';
 
 test('floorplan settings preserve unrelated config and produce explicit mappings', () => {
   const original = { cards: [{ id: 1 }], globalConfig: { theme: 'dark' }, homeOs: { attention: { battery: 20 } } };
@@ -10,6 +10,7 @@ test('floorplan settings preserve unrelated config and produce explicit mappings
   expect(merged.homeOs.attention).toEqual({ battery: 20 });
   expect(merged.homeOs.floorplan.rooms[0].temperature).toBe('sensor.living_temperature');
   expect(merged.homeOs.floorplan.lights[0]).toEqual({ entityId: 'light.living', objectNames: ['Light_LivingDining'] });
+  expect(createGlobalMappings({ homeOs: { floorplan: { vacuum: 'vacuum.dreame' } } })).toEqual({ vacuum: 'vacuum.dreame' });
 });
 
 test('entity options respect domain and device class', () => {
