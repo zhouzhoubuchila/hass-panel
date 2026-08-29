@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useHass } from '@hakit/core';
 import { Droplets, Lightbulb, Thermometer } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { buildFloorplanState, entityForObject } from './floorplanBinding';
+import { buildFloorplanState, entityForObject, roomForObject } from './floorplanBinding';
 import { createProceduralDPlan } from './proceduralDPlan';
 
 export default function ThreeFloorplan({ config }) {
@@ -12,6 +12,7 @@ export default function ThreeFloorplan({ config }) {
   const entities = useStore((state) => state.entities);
   const { language } = useLanguage();
   const [status, setStatus] = useState('loading');
+  const [selectedRoomId, setSelectedRoomId] = useState(null);
   const floorplanState = useMemo(() => buildFloorplanState(config, entities || {}), [config, entities]);
 
   useEffect(() => {
@@ -25,10 +26,11 @@ export default function ThreeFloorplan({ config }) {
       const position = config.camera?.position || [6, 7, 8];
       camera.position.set(...position);
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      const lowQuality = config.quality === 'low' || window.matchMedia('(max-width: 767px), (prefers-reduced-motion: reduce)').matches;
+      renderer.setPixelRatio(lowQuality ? 1 : Math.min(window.devicePixelRatio, 2));
       renderer.setSize(container.clientWidth, container.clientHeight);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.enabled = !lowQuality;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       container.appendChild(renderer.domElement);
       scene.add(new THREE.HemisphereLight(0xffffff, 0x27221a, 2.2));
@@ -75,7 +77,7 @@ export default function ThreeFloorplan({ config }) {
       runtime?.renderer?.domElement?.remove();
       runtimeRef.current = null;
     };
-  }, [config.camera, config.layout, config.modelUrl]);
+  }, [config.camera, config.layout, config.modelUrl, config.quality]);
 
   useEffect(() => {
     const root = runtimeRef.current?.root;
@@ -90,8 +92,25 @@ export default function ThreeFloorplan({ config }) {
       }
       object.material.emissive?.set(binding.isOn ? binding.onColor : binding.offColor);
       if ('emissiveIntensity' in object.material) object.material.emissiveIntensity = binding.isOn ? 1.8 : 0.08;
+      if (!object.userData.homeOsPointLight && runtimeRef.current?.THREE) {
+        const glow = new runtimeRef.current.THREE.PointLight(binding.onColor, 0, 4.2, 2);
+        glow.position.y = 1.45;
+        object.add(glow);
+        object.userData.homeOsPointLight = glow;
+      }
+      object.userData.homeOsPointLight.intensity = binding.isOn ? 2.3 : 0;
     });
   }, [floorplanState, status]);
+
+  useEffect(() => {
+    const runtime = runtimeRef.current;
+    if (!runtime) return;
+    const room = floorplanState.rooms.find((item) => item.id === selectedRoomId);
+    const roomObject = room && runtime.root?.getObjectByName(room.objectNames[0]);
+    const target = roomObject?.position || { x: 0, y: 0, z: 0 };
+    runtime.controls.target.set(target.x, 0, target.z);
+    runtime.controls.update();
+  }, [floorplanState.rooms, selectedRoomId]);
 
   const handlePointer = (event) => {
     const runtime = runtimeRef.current;
@@ -101,8 +120,15 @@ export default function ThreeFloorplan({ config }) {
     runtime.raycaster.setFromCamera(runtime.pointer, runtime.camera);
     const hit = runtime.raycaster.intersectObject(runtime.root, true)[0];
     const entityId = hit && entityForObject(hit.object, floorplanState.lights);
-    if (entityId) callService({ domain: 'light', service: 'toggle', target: { entity_id: entityId } });
+    if (entityId) {
+      callService({ domain: 'light', service: 'toggle', target: { entity_id: entityId } });
+      return;
+    }
+    const room = hit && roomForObject(hit.object, floorplanState.rooms);
+    if (room) setSelectedRoomId((current) => current === room.id ? null : room.id);
   };
+
+  const selectedRoom = floorplanState.rooms.find((room) => room.id === selectedRoomId);
 
   return <section className="home-os-floorplan home-os-floorplan--3d" aria-label={language === 'zh' ? '3D 户型' : '3D floorplan'}>
     <div ref={containerRef} className="home-os-three-canvas" onClick={handlePointer} />
@@ -111,6 +137,7 @@ export default function ThreeFloorplan({ config }) {
       {floorplanState.rooms.slice(0, 3).map((room) => <div key={room.id}><strong>{room.name}</strong><span><Thermometer size={13} />{room.temperature ?? '—'}°</span><span><Droplets size={13} />{room.humidity ?? '—'}%</span></div>)}
       {floorplanState.lights.slice(0, 3).map((light) => <button type="button" disabled={!light.available} onClick={() => callService({ domain: 'light', service: 'toggle', target: { entity_id: light.entityId } })} key={light.entityId}><Lightbulb size={14} />{light.entityId.split('.').pop()}<i className={light.isOn ? 'is-on' : ''} /></button>)}
     </div>
+    {selectedRoom && <button type="button" className="home-os-room-focus" onClick={() => setSelectedRoomId(null)}><strong>{selectedRoom.name}</strong><span>{selectedRoom.temperature ?? '—'}° · {selectedRoom.humidity ?? '—'}%</span><small>{selectedRoom.presence === null ? (language === 'zh' ? '未发现人体传感器' : 'No presence sensor') : selectedRoom.presence ? (language === 'zh' ? '有人活动' : 'Occupied') : (language === 'zh' ? '无人活动' : 'Clear')}</small></button>}
     <span className="home-os-floorplan-badge">{config.modelUrl ? 'FLOORPLAN' : 'D · 99.91 M²'} · LIVE</span>
   </section>;
 }
