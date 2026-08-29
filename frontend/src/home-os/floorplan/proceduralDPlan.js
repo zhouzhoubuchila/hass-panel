@@ -92,7 +92,32 @@ export function createProceduralDPlan(THREE) {
     label.userData.roomId = room.id;
     label.position.set(room.x, 0.72, room.z);
     root.add(label);
+
+    const markerTypes = ['presence', 'climate', 'curtain', 'media'];
+    markerTypes.forEach((type, markerIndex) => {
+      const marker = new THREE.Mesh(
+        new THREE.SphereGeometry(0.11, 18, 14),
+        new THREE.MeshStandardMaterial({ color: '#68706e', emissive: '#202523', emissiveIntensity: 0.15, roughness: 0.42 }),
+      );
+      marker.name = `Hotspot_${type}_${room.id}`;
+      marker.userData.roomId = room.id;
+      marker.userData.deviceType = type;
+      marker.position.set(room.x - room.width * 0.26 + markerIndex * 0.26, 0.24, room.z + room.depth * 0.28);
+      marker.visible = false;
+      root.add(marker);
+    });
   });
+
+  const vacuum = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.25, 0.25, 0.11, 32),
+    new THREE.MeshStandardMaterial({ color: '#68706e', emissive: '#202523', emissiveIntensity: 0.12, roughness: 0.36 }),
+  );
+  vacuum.name = 'Hotspot_vacuum';
+  vacuum.userData.roomId = 'living_dining';
+  vacuum.userData.deviceType = 'vacuum';
+  vacuum.position.set(-1.35, 0.16, 1.55);
+  vacuum.visible = false;
+  root.add(vacuum);
 
   const wallMaterial = new THREE.MeshStandardMaterial({ color: '#ede9df', roughness: 0.88 });
   D_PLAN_WALLS.forEach(([x1, z1, x2, z2], index) => {
