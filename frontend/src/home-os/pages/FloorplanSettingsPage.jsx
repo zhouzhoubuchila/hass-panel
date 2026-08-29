@@ -5,6 +5,8 @@ import { useHass } from '@hakit/core';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { configApi } from '../../utils/api';
 import { FLOORPLAN_FIELDS, createGlobalMappings, createRoomMappings, getEntityOptions, mergeFloorplanConfig } from '../floorplan/floorplanSettingsModel';
+import { discoverRoomBindings } from '../floorplan/floorplanBinding';
+import { D_PLAN_ROOMS } from '../floorplan/proceduralDPlan';
 import '../styles/floorplan-settings.css';
 import '../styles/floorplan-devices.css';
 
@@ -25,6 +27,12 @@ export default function FloorplanSettingsPage() {
   const [status, setStatus] = useState('loading');
   const localeIndex = language === 'zh' ? 0 : 1;
   const options = useMemo(() => Object.fromEntries(FLOORPLAN_FIELDS.map((field) => [field, getEntityOptions(entities || {}, field)])), [entities]);
+  const discoveries = useMemo(() => Object.fromEntries(D_PLAN_ROOMS.map((room) => [room.id, discoverRoomBindings(room, entities || {})])), [entities]);
+  const mappingCounts = useMemo(() => {
+    const manual = mappings.reduce((count, room) => count + FLOORPLAN_FIELDS.filter((field) => room[field]).length, 0) + (globalMappings.vacuum ? 1 : 0);
+    const automatic = mappings.reduce((count, room) => count + FLOORPLAN_FIELDS.filter((field) => !room[field] && discoveries[room.id]?.[field]).length, 0) + (!globalMappings.vacuum && getEntityOptions(entities || {}, 'vacuum').length ? 1 : 0);
+    return { manual, automatic };
+  }, [discoveries, entities, globalMappings.vacuum, mappings]);
 
   useEffect(() => {
     let active = true;
@@ -62,11 +70,12 @@ export default function FloorplanSettingsPage() {
     </header>
     {status === 'loading' ? <div className="home-os-settings-message">{language === 'zh' ? '正在读取配置…' : 'Loading configuration…'}</div> : status === 'error' && !config ? <div className="home-os-settings-message is-error">{language === 'zh' ? '配置读取失败，请检查后端连接。' : 'Could not load configuration.'}</div> : <>
       <section className="home-os-global-device-mapping"><div><strong>{language === 'zh' ? '全屋设备' : 'Whole-home devices'}</strong><small>{language === 'zh' ? '设备位置会显示在客餐厅区域' : 'Shown in the living area'}</small></div><label><span>{language === 'zh' ? '扫地机器人' : 'Robot vacuum'}</span><input list="home-os-vacuum-entities" value={globalMappings.vacuum} placeholder={language === 'zh' ? '自动发现' : 'Auto-discover'} onChange={(event) => setGlobalMappings({ vacuum: event.target.value })} /></label></section>
+      <div className="home-os-mapping-summary"><span>{language === 'zh' ? `手动映射 ${mappingCounts.manual}` : `Manual ${mappingCounts.manual}`}</span><span>{language === 'zh' ? `自动发现 ${mappingCounts.automatic}` : `Discovered ${mappingCounts.automatic}`}</span></div>
       <div className="home-os-room-mapping-list">
         {mappings.map((room) => <section key={room.id}>
           <div className="home-os-room-mapping-title"><Home size={17} /><strong>{room.name}</strong><small>{room.id}</small></div>
           <div className="home-os-room-mapping-fields">
-            {FLOORPLAN_FIELDS.map((field) => <label key={field}><span>{labels[field][localeIndex]}</span><input list={`home-os-${field}-entities`} value={room[field]} placeholder={language === 'zh' ? '自动发现' : 'Auto-discover'} onChange={(event) => update(room.id, field, event.target.value)} /></label>)}
+            {FLOORPLAN_FIELDS.map((field) => <label key={field}><span>{labels[field][localeIndex]}</span><input list={`home-os-${field}-entities`} value={room[field]} placeholder={language === 'zh' ? '自动发现' : 'Auto-discover'} onChange={(event) => update(room.id, field, event.target.value)} />{!room[field] && discoveries[room.id]?.[field] && <em title={discoveries[room.id][field]}>{language === 'zh' ? '已发现' : 'Found'} · {discoveries[room.id][field]}</em>}</label>)}
           </div>
         </section>)}
       </div>
