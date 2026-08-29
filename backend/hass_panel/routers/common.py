@@ -23,7 +23,7 @@ class InitializeData(BaseModel):
     hass_token: str = ""
 
 @router.post("/upload")
-async def upload_file(file: UploadFile):
+async def upload_file(file: UploadFile, current_user: User = Depends(get_current_user)):
     file_name, file_path = await handle_upload_file(file, file_dir=cfg.base.upload_dir)
     logger.info(f"Upload file: {file_name}, {file_path}")
     # 判断是否为ingress环境
@@ -69,7 +69,7 @@ async def initialize(data: InitializeData):
         # 创建管理员用户
         admin_user = User(
             username=data.username,
-            hashed_password=data.password,
+            hashed_password=hash_password(data.password),
             is_active=True
         )
         db.add(admin_user)
@@ -133,4 +133,3 @@ async def download_log(current_user: User = Depends(get_current_user)):
         logger.error(f"Failed to download logs: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
     
-

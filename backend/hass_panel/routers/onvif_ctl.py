@@ -8,9 +8,10 @@ from onvif import ONVIFCamera
 import zeep
 import asyncio
 from loguru import logger
+from hass_panel.core.auth_deps import get_current_user
 
 # 创建路由器
-router = APIRouter(prefix="/api/onvif", tags=["onvif"])
+router = APIRouter(prefix="/api/onvif", tags=["onvif"], dependencies=[Depends(get_current_user)])
 
 
 # 活动的PTZ会话跟踪
@@ -98,29 +99,20 @@ def parse_camera_url(entity_id, stream_url=None):
                 except ValueError:
                     port = 80
             
-            camera_info = {
-                "ip": ip,
-                "port": port,
-                "username": username or "admin",
-                "password": password or "admin"
-            }
+            if not username or not password:
+                raise HTTPException(status_code=400, detail="ONVIF username and password are required")
+
+            camera_info = {"ip": ip, "port": port, "username": username, "password": password}
             
-            logger.info(f"Parsed camera URL: {camera_info}")
+            logger.info(f"Parsed ONVIF camera endpoint: {ip}:{port}")
             return camera_info
         
-        # 如果没有提供stream_url，则使用默认值或从配置中获取
-        # 这里应该根据实际情况从配置或数据库中获取摄像头信息
-        camera_info = {
-            "ip": "192.168.1.100",  # 示例IP
-            "port": 80,             # 示例端口
-            "username": "admin",    # 示例用户名
-            "password": "admin"     # 示例密码
-        }
-        
-        return camera_info
+        raise HTTPException(status_code=400, detail="A configured ONVIF stream URL is required")
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Failed to parse camera URL: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Invalid camera URL: {stream_url or entity_id}")
+        logger.error(f"Failed to parse ONVIF camera configuration: {type(e).__name__}")
+        raise HTTPException(status_code=400, detail="Invalid ONVIF camera configuration")
 
 @router.post("/ptz")
 async def ptz_control(request: PTZRequest):

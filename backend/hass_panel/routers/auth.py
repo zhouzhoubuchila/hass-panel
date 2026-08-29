@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 
 from hass_panel.core.deps import get_db
-from hass_panel.core.hash_utils import verify_password, hash_password
+from hass_panel.core.hash_utils import verify_password, hash_password, password_needs_rehash
+from hass_panel.core.auth_deps import get_current_user
 from hass_panel.core.jwt_utils import create_access_token
 from hass_panel.models.database import User
 from hass_panel.utils.common import generate_resp
@@ -45,6 +46,10 @@ async def login(
             detail="密码错误",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    if password_needs_rehash(user.hashed_password):
+        user.hashed_password = hash_password(form_data.password)
+        db.commit()
     
     access_token_expires = timedelta(days=cfg.security.ACCESS_TOKEN_EXPIRE_DAYS)
     access_token = create_access_token(
@@ -56,7 +61,12 @@ async def login(
     }
 
 @router.post("/register")
-async def register(username: str, password: str, db: Session = Depends(get_db)):
+async def register(
+    username: str,
+    password: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     db_user = db.query(User).filter(User.username == username).first()
     if db_user:
         return generate_resp(code=400, message="Username already registered")

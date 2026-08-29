@@ -137,7 +137,7 @@ async def save_config(
                         card["config"]["cameras"] = updated_cameras
             
             # 保存更新后的go2rtc配置
-            logger.info(f"go2rtc_config: {go2rtc_config}")
+            logger.info(f"Updated go2rtc configuration with {len(go2rtc_config['streams'])} stream(s)")
             with open(go2rtc_config_path, "w", encoding="utf-8") as f:
                 yaml.dump(go2rtc_config, f, allow_unicode=True, default_flow_style=False)
             
