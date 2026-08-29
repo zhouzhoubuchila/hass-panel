@@ -3,6 +3,7 @@ import { useHass } from '@hakit/core';
 import { Droplets, Lightbulb, Thermometer } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { buildFloorplanState, entityForObject } from './floorplanBinding';
+import { createProceduralDPlan } from './proceduralDPlan';
 
 export default function ThreeFloorplan({ config }) {
   const containerRef = useRef(null);
@@ -17,7 +18,7 @@ export default function ThreeFloorplan({ config }) {
     let active = true;
     let frame;
     const container = containerRef.current;
-    Promise.all([import('three'), import('three/addons/loaders/GLTFLoader.js'), import('three/addons/controls/OrbitControls.js')]).then(([THREE, { GLTFLoader }, { OrbitControls }]) => {
+    Promise.all([import('three'), import('three/addons/controls/OrbitControls.js')]).then(([THREE, { OrbitControls }]) => {
       if (!active || !container) return;
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, 1000);
@@ -27,10 +28,13 @@ export default function ThreeFloorplan({ config }) {
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(container.clientWidth, container.clientHeight);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       container.appendChild(renderer.domElement);
       scene.add(new THREE.HemisphereLight(0xffffff, 0x27221a, 2.2));
       const keyLight = new THREE.DirectionalLight(0xffe5bf, 2.4);
       keyLight.position.set(5, 10, 6);
+      keyLight.castShadow = true;
       scene.add(keyLight);
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
@@ -42,12 +46,20 @@ export default function ThreeFloorplan({ config }) {
       runtimeRef.current = runtime;
       const animate = () => { controls.update(); renderer.render(scene, camera); frame = window.requestAnimationFrame(animate); };
       animate();
-      new GLTFLoader().load(config.modelUrl, (gltf) => {
-        if (!active) return;
-        runtime.root = gltf.scene;
-        scene.add(gltf.scene);
+      if (config.modelUrl) {
+        import('three/addons/loaders/GLTFLoader.js').then(({ GLTFLoader }) => {
+          new GLTFLoader().load(config.modelUrl, (gltf) => {
+            if (!active) return;
+            runtime.root = gltf.scene;
+            scene.add(gltf.scene);
+            setStatus('ready');
+          }, undefined, () => active && setStatus('error'));
+        }).catch(() => active && setStatus('error'));
+      } else {
+        runtime.root = createProceduralDPlan(THREE);
+        scene.add(runtime.root);
         setStatus('ready');
-      }, undefined, () => active && setStatus('error'));
+      }
       const resize = () => { if (!container.clientWidth || !container.clientHeight) return; camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); };
       const observer = new ResizeObserver(resize);
       observer.observe(container);
@@ -63,7 +75,7 @@ export default function ThreeFloorplan({ config }) {
       runtime?.renderer?.domElement?.remove();
       runtimeRef.current = null;
     };
-  }, [config.camera, config.modelUrl]);
+  }, [config.camera, config.layout, config.modelUrl]);
 
   useEffect(() => {
     const root = runtimeRef.current?.root;
@@ -79,7 +91,7 @@ export default function ThreeFloorplan({ config }) {
       object.material.emissive?.set(binding.isOn ? binding.onColor : binding.offColor);
       if ('emissiveIntensity' in object.material) object.material.emissiveIntensity = binding.isOn ? 1.8 : 0.08;
     });
-  }, [floorplanState]);
+  }, [floorplanState, status]);
 
   const handlePointer = (event) => {
     const runtime = runtimeRef.current;
@@ -99,7 +111,7 @@ export default function ThreeFloorplan({ config }) {
       {floorplanState.rooms.slice(0, 3).map((room) => <div key={room.id}><strong>{room.name}</strong><span><Thermometer size={13} />{room.temperature ?? '—'}°</span><span><Droplets size={13} />{room.humidity ?? '—'}%</span></div>)}
       {floorplanState.lights.slice(0, 3).map((light) => <button type="button" disabled={!light.available} onClick={() => callService({ domain: 'light', service: 'toggle', target: { entity_id: light.entityId } })} key={light.entityId}><Lightbulb size={14} />{light.entityId.split('.').pop()}<i className={light.isOn ? 'is-on' : ''} /></button>)}
     </div>
-    <span className="home-os-floorplan-badge">FLOORPLAN · LIVE</span>
+    <span className="home-os-floorplan-badge">{config.modelUrl ? 'FLOORPLAN' : 'D · 99.91 M²'} · LIVE</span>
   </section>;
 }
 
