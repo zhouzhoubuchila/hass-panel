@@ -717,6 +717,7 @@ function ConfigPage({ sidebarVisible, setSidebarVisible }) {
   const [showGroupManager, setShowGroupManager] = useState(false);
   const [groups, setGroups] = useState([]);
   const [filterGroup, setFilterGroup] = useState('all'); // 添加分组筛选状态
+  const [rawConfig, setRawConfig] = useState({});
 
   // 修改加载配置数据的 useEffect
   useEffect(() => {
@@ -725,6 +726,7 @@ function ConfigPage({ sidebarVisible, setSidebarVisible }) {
         setLoading(true);
         const response = await configApi.getConfig();
         const config = response.data;
+        setRawConfig(config);
         if (config.cards) {
           setCards(config.cards.map(card => ({
             ...card,
@@ -757,6 +759,7 @@ function ConfigPage({ sidebarVisible, setSidebarVisible }) {
       message.loading(t('config.saving'));
       // 保存卡片配置和分组配置到后端
       await configApi.saveConfig({
+        ...rawConfig,
         globalConfig: {
           ...globalConfig,
           groups: groups
@@ -788,6 +791,7 @@ function ConfigPage({ sidebarVisible, setSidebarVisible }) {
 
         // 保存到后端，但只保存卡片配置，不保存布局
         await configApi.saveConfig({
+          ...rawConfig,
           cards: importedConfig.cards,
           // 不再包含布局信息
         });
@@ -1314,3 +1318,4 @@ function ConfigPage({ sidebarVisible, setSidebarVisible }) {
 }
 
 export default ConfigPage;
+
