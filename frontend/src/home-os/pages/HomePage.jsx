@@ -1,39 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, ChevronRight, CloudSun, MapPin, Users } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, CloudSun, Droplets, MapPin, Moon, Thermometer, Users } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import FloorplanPlaceholder from '../floorplan/FloorplanPlaceholder';
+import useHomeDashboard from '../data/useHomeDashboard';
+import { getTravelAdvice } from '../data/dashboardModel';
+
+const weatherNames = { sunny: ['晴', 'Sunny'], cloudy: ['多云', 'Cloudy'], partlycloudy: ['局部多云', 'Partly cloudy'], rainy: ['有雨', 'Rainy'], 'clear-night': ['晴夜', 'Clear night'], fog: ['有雾', 'Foggy'], windy: ['有风', 'Windy'], lightning: ['雷雨', 'Thunderstorm'], snowy: ['有雪', 'Snowy'] };
+const moonIcons = { new_moon: '●', waxing_crescent: '◔', first_quarter: '◑', waxing_gibbous: '◕', full_moon: '○', waning_gibbous: '◕', last_quarter: '◐', waning_crescent: '◔' };
 
 export default function HomePage() {
   const { language } = useLanguage();
+  const dashboard = useHomeDashboard();
   const [now, setNow] = useState(new Date());
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 30000); return () => window.clearInterval(timer); }, []);
   const locale = language === 'zh' ? 'zh-CN' : 'en-US';
+  const weatherLabel = dashboard.weather ? (weatherNames[dashboard.weather.condition]?.[language === 'zh' ? 0 : 1] || dashboard.weather.condition) : null;
+  const summary = dashboard.attention.length ? (language === 'zh' ? `今天有 ${dashboard.attention.length} 项状态需要留意` : `${dashboard.attention.length} items need attention today`) : (language === 'zh' ? '家庭状态平稳，暂无需要处理的事项' : 'Your home is calm. Nothing needs attention');
 
-  return (
-    <div className="home-os-home-page">
-      <section className="home-os-greeting">
-        <div><span>{now.toLocaleDateString(locale, { month: 'long', day: 'numeric', weekday: 'long' })}</span><h1>{now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}</h1></div>
-        <div className="home-os-connection"><span /><div><strong>{language === 'zh' ? 'Home Assistant 已连接' : 'Home Assistant connected'}</strong><small>{language === 'zh' ? '实时状态通道可用' : 'Live state channel available'}</small></div></div>
-      </section>
-
-      <div className="home-os-home-grid">
-        <FloorplanPlaceholder />
-        <aside className="home-os-summary-rail">
-          <section className="home-os-panel home-os-attention">
-            <div className="home-os-panel-title"><span><CheckCircle2 size={20} />{language === 'zh' ? '需要你处理' : 'Needs attention'}</span><button type="button" aria-label={language === 'zh' ? '查看详情' : 'View details'}><ChevronRight size={18} /></button></div>
-            <strong>{language === 'zh' ? '尚未配置异常规则' : 'Attention rules are not configured'}</strong>
-            <p>{language === 'zh' ? 'Phase 2 将从真实 HA 实体汇总异常；这里不会显示模拟告警。' : 'Phase 2 will derive alerts from real HA entities. No mock alerts are shown.'}</p>
-          </section>
-          <section className="home-os-panel">
-            <div className="home-os-panel-title"><span><CloudSun size={20} />{language === 'zh' ? '今日环境' : 'Today outside'}</span></div>
-            <div className="home-os-empty-row"><MapPin size={18} /><span>{language === 'zh' ? '选择 weather 实体后显示天气与出行建议' : 'Select a weather entity for conditions and travel advice'}</span></div>
-          </section>
-          <section className="home-os-panel">
-            <div className="home-os-panel-title"><span><Users size={20} />{language === 'zh' ? '家庭状态' : 'Household'}</span></div>
-            <div className="home-os-empty-row"><span className="home-os-dot" /><span>{language === 'zh' ? '等待人员与房间实体映射' : 'Waiting for people and room mappings'}</span></div>
-          </section>
-        </aside>
-      </div>
+  return <div className="home-os-home-page">
+    <section className="home-os-greeting">
+      <div><span>{now.toLocaleDateString(locale, { month: 'long', day: 'numeric', weekday: 'long' })}</span><h1>{now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}</h1><p className="home-os-daily-summary">{summary}</p></div>
+      <div className={`home-os-connection ${dashboard.ready ? 'is-ready' : 'is-waiting'}`}><span /><div><strong>{dashboard.ready ? (language === 'zh' ? 'Home Assistant 已连接' : 'Home Assistant connected') : (language === 'zh' ? '正在连接 Home Assistant' : 'Connecting to Home Assistant')}</strong><small>{language === 'zh' ? '实体状态实时同步' : 'Entity states update live'}</small></div></div>
+    </section>
+    <div className="home-os-home-grid">
+      <FloorplanPlaceholder />
+      <aside className="home-os-summary-rail">
+        <section className={`home-os-panel home-os-attention ${dashboard.attention.length ? 'has-items' : 'is-clear'}`}>
+          <div className="home-os-panel-title"><span>{dashboard.attention.length ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}{language === 'zh' ? '需要你处理' : 'Needs attention'}</span><b>{dashboard.attention.length}</b></div>
+          {dashboard.attention.length ? <div className="home-os-attention-list">{dashboard.attention.slice(0, 4).map((item) => <div className={`home-os-attention-item is-${item.severity}`} key={item.id}><span /><div><strong>{item.title}</strong><small>{item.description}</small></div></div>)}</div> : <><strong>{language === 'zh' ? '家庭状态正常' : 'Household status normal'}</strong><p>{language === 'zh' ? '门窗、设备电量、系统更新和关键实体均无异常。' : 'Openings, batteries, updates and mapped entities look normal.'}</p></>}
+        </section>
+        <section className="home-os-panel home-os-weather-panel">
+          <div className="home-os-panel-title"><span><CloudSun size={20} />{language === 'zh' ? '今日环境' : 'Today outside'}</span></div>
+          {dashboard.weather ? <><div className="home-os-weather-main"><div><strong>{weatherLabel}</strong><small><MapPin size={13} />{dashboard.weather.friendlyName || (language === 'zh' ? '家庭所在地' : 'Home')}</small></div><b>{dashboard.weather.temperature ?? '—'}°</b></div><div className="home-os-metrics"><span><Thermometer size={15} />{dashboard.weather.apparentTemperature ?? dashboard.weather.temperature ?? '—'}°</span><span><Droplets size={15} />{dashboard.weather.humidity ?? '—'}%</span><span><Moon size={15} />{moonIcons[dashboard.moon] || '—'}</span></div><p className="home-os-advice">{getTravelAdvice(dashboard.weather, language)}</p></> : <div className="home-os-empty-row"><MapPin size={18} /><span>{language === 'zh' ? '等待 weather 实体映射' : 'Waiting for a weather entity mapping'}</span></div>}
+        </section>
+        <section className="home-os-panel">
+          <div className="home-os-panel-title"><span><Users size={20} />{language === 'zh' ? '家庭状态' : 'Household'}</span></div>
+          {dashboard.family.total ? <><div className="home-os-family-count"><strong>{dashboard.family.home}</strong><span>/ {dashboard.family.total} {language === 'zh' ? '人在家' : 'home'}</span></div><div className="home-os-people">{dashboard.family.people.slice(0, 5).map((person) => <span className={person.state === 'home' ? 'is-home' : ''} key={person.entity_id}>{person.attributes?.friendly_name || person.entity_id.replace('person.', '')}</span>)}</div></> : <div className="home-os-empty-row"><span className="home-os-dot" /><span>{language === 'zh' ? '等待 person 实体映射' : 'Waiting for person entity mappings'}</span></div>}
+        </section>
+      </aside>
     </div>
-  );
+  </div>;
 }
