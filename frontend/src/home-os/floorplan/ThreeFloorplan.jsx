@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useHass } from '@hakit/core';
-import { Droplets, Lightbulb, Settings2, Thermometer } from 'lucide-react';
+import { AirVent, AlertTriangle, CircleDot, Droplets, Lightbulb, Radio, Settings2, Thermometer, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { buildFloorplanState, entityForObject, roomForObject } from './floorplanBinding';
+import { buildFloorplanState, deviceForObject, entityForObject, roomForObject } from './floorplanBinding';
 import { createProceduralDPlan } from './proceduralDPlan';
 
 export default function ThreeFloorplan({ config }) {
@@ -87,6 +87,22 @@ export default function ThreeFloorplan({ config }) {
     root.traverse((object) => {
       if (!object.isMesh) return;
       const binding = floorplanState.lights.find((light) => light.objectNames.includes(object.name));
+      const hotspotRoom = floorplanState.rooms.find((room) => room.id === object.userData?.roomId);
+      const device = object.userData?.deviceType === 'vacuum' ? floorplanState.vacuum : hotspotRoom?.devices.find((item) => item.type === object.userData?.deviceType);
+      if (object.userData?.deviceType) {
+        object.visible = Boolean(device);
+        if (!device) return;
+        if (!object.userData.homeOsMaterialCloned) {
+          object.material = object.material.clone();
+          object.userData.homeOsMaterialCloned = true;
+        }
+        const activeColors = { presence: '#55b983', climate: '#64b5e8', curtain: '#78a6d0', media: '#aa86df', vacuum: '#f2a84b' };
+        const color = device.available && !device.error ? (device.active ? activeColors[device.type] : '#68706e') : '#e36060';
+        object.material.color.set(color);
+        object.material.emissive?.set(color);
+        object.material.emissiveIntensity = device.active ? 1.25 : 0.12;
+        return;
+      }
       if (!binding) return;
       if (!object.userData.homeOsMaterialCloned) {
         object.material = object.material.clone();
@@ -103,6 +119,18 @@ export default function ThreeFloorplan({ config }) {
       object.userData.homeOsPointLight.intensity = binding.isOn ? 2.3 : 0;
     });
   }, [floorplanState, status]);
+
+  const controlDevice = (device) => {
+    if (!device?.available || device.type === 'presence') return;
+    const actions = {
+      climate: { domain: 'climate', service: device.state === 'off' ? 'turn_on' : 'turn_off' },
+      curtain: { domain: 'cover', service: 'toggle' },
+      media: { domain: 'media_player', service: 'media_play_pause' },
+      vacuum: { domain: 'vacuum', service: ['cleaning', 'returning'].includes(device.state) ? 'pause' : 'start' },
+    };
+    const action = actions[device.type];
+    if (action) callService({ ...action, target: { entity_id: device.entityId } });
+  };
 
   useEffect(() => {
     const runtime = runtimeRef.current;
@@ -126,11 +154,17 @@ export default function ThreeFloorplan({ config }) {
       callService({ domain: 'light', service: 'toggle', target: { entity_id: entityId } });
       return;
     }
+    const device = hit && deviceForObject(hit.object, floorplanState.rooms, [floorplanState.vacuum]);
+    if (device) {
+      controlDevice(device);
+      return;
+    }
     const room = hit && roomForObject(hit.object, floorplanState.rooms);
     if (room) setSelectedRoomId((current) => current === room.id ? null : room.id);
   };
 
   const selectedRoom = floorplanState.rooms.find((room) => room.id === selectedRoomId);
+  const selectedDevices = selectedRoom ? [...selectedRoom.devices, ...(selectedRoom.id === 'living_dining' && floorplanState.vacuum ? [floorplanState.vacuum] : [])] : [];
 
   return <section className="home-os-floorplan home-os-floorplan--3d" aria-label={language === 'zh' ? '3D 户型' : '3D floorplan'}>
     <div ref={containerRef} className="home-os-three-canvas" onClick={handlePointer} />
@@ -140,7 +174,8 @@ export default function ThreeFloorplan({ config }) {
       {floorplanState.rooms.slice(0, 3).map((room) => <div key={room.id}><strong>{room.name}</strong><span><Thermometer size={13} />{room.temperature ?? '—'}°</span><span><Droplets size={13} />{room.humidity ?? '—'}%</span></div>)}
       {floorplanState.lights.slice(0, 3).map((light) => <button type="button" disabled={!light.available} onClick={() => callService({ domain: 'light', service: 'toggle', target: { entity_id: light.entityId } })} key={light.entityId}><Lightbulb size={14} />{light.entityId.split('.').pop()}<i className={light.isOn ? 'is-on' : ''} /></button>)}
     </div>
-    {selectedRoom && <button type="button" className="home-os-room-focus" onClick={() => setSelectedRoomId(null)}><strong>{selectedRoom.name}</strong><span>{selectedRoom.temperature ?? '—'}° · {selectedRoom.humidity ?? '—'}%</span><small>{selectedRoom.presence === null ? (language === 'zh' ? '未发现人体传感器' : 'No presence sensor') : selectedRoom.presence ? (language === 'zh' ? '有人活动' : 'Occupied') : (language === 'zh' ? '无人活动' : 'Clear')}</small></button>}
+    {floorplanState.alerts.length > 0 && <div className="home-os-floorplan-alert"><AlertTriangle size={13} />{language === 'zh' ? `${floorplanState.alerts.length} 个设备异常` : `${floorplanState.alerts.length} device alerts`}</div>}
+    {selectedRoom && <aside className="home-os-room-focus"><button type="button" className="home-os-room-close" onClick={() => setSelectedRoomId(null)}><X size={13} /></button><strong>{selectedRoom.name}</strong><span>{selectedRoom.temperature ?? '—'}° · {selectedRoom.humidity ?? '—'}%</span><small>{selectedRoom.presence === null ? (language === 'zh' ? '未发现人体传感器' : 'No presence sensor') : selectedRoom.presence ? (language === 'zh' ? '有人活动' : 'Occupied') : (language === 'zh' ? '无人活动' : 'Clear')}</small><div className="home-os-room-devices">{selectedDevices.map((device) => <button type="button" disabled={!device.available || device.type === 'presence'} className={device.active ? 'is-active' : ''} onClick={() => controlDevice(device)} key={device.type}>{device.type === 'climate' ? <AirVent size={13} /> : device.type === 'media' ? <Radio size={13} /> : <CircleDot size={13} />}{device.type}</button>)}</div></aside>}
     <span className="home-os-floorplan-badge">{config.modelUrl ? 'FLOORPLAN' : 'D · 99.91 M²'} · LIVE</span>
   </section>;
 }
