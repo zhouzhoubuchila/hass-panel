@@ -32,6 +32,7 @@ export function buildFloorplanState(config = {}, entities = {}) {
     const mediaEntity = entities[room.media || found.media];
     const asDevice = (type, entity) => entity ? {
       type,
+      roomId: room.id,
       entityId: entity.entity_id,
       state: entity.state,
       available: !['unknown', 'unavailable'].includes(entity.state),
@@ -64,6 +65,7 @@ export function buildFloorplanState(config = {}, entities = {}) {
   const vacuumEntity = entities[config.vacuum] || Object.values(entities).find((entity) => entity.entity_id?.startsWith('vacuum.'));
   const vacuum = vacuumEntity ? {
     type: 'vacuum',
+    roomId: 'living_dining',
     entityId: vacuumEntity.entity_id,
     state: vacuumEntity.state,
     available: !['unknown', 'unavailable'].includes(vacuumEntity.state),
@@ -71,7 +73,7 @@ export function buildFloorplanState(config = {}, entities = {}) {
     error: vacuumEntity.state === 'error',
   } : null;
   const allDevices = [...rooms.flatMap((room) => room.devices), ...(vacuum ? [vacuum] : [])];
-  const alerts = allDevices.filter((device) => !device.available || device.error).map((device) => ({ id: device.entityId, type: device.type, state: device.state }));
+  const alerts = allDevices.filter((device) => !device.available || device.error).map((device) => ({ id: device.entityId, type: device.type, state: device.state, roomId: device.roomId }));
   return { rooms, lights, vacuum, alerts };
 }
 
