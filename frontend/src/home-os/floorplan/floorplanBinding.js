@@ -16,6 +16,8 @@ export function discoverRoomBindings(room, entities = {}) {
     humidity: sensor('humidity'),
     presence: matched.find((entity) => entity.entity_id?.startsWith('binary_sensor.') && ['occupancy', 'presence', 'motion'].includes(entity.attributes?.device_class))?.entity_id,
     climate: matched.find((entity) => entity.entity_id?.startsWith('climate.'))?.entity_id,
+    curtain: matched.find((entity) => entity.entity_id?.startsWith('cover.'))?.entity_id,
+    media: matched.find((entity) => entity.entity_id?.startsWith('media_player.'))?.entity_id,
     light: matched.find((entity) => entity.entity_id?.startsWith('light.'))?.entity_id,
   };
 }
@@ -26,6 +28,15 @@ export function buildFloorplanState(config = {}, entities = {}) {
     const found = discoveries.get(room.id);
     const presenceEntity = entities[room.presence || found.presence];
     const climateEntity = entities[room.climate || found.climate];
+    const curtainEntity = entities[room.curtain || found.curtain];
+    const mediaEntity = entities[room.media || found.media];
+    const asDevice = (type, entity) => entity ? {
+      type,
+      entityId: entity.entity_id,
+      state: entity.state,
+      available: !['unknown', 'unavailable'].includes(entity.state),
+      active: type === 'presence' ? entity.state === 'on' : type === 'climate' ? entity.state !== 'off' : type === 'curtain' ? entity.state !== 'closed' : entity.state === 'playing',
+    } : null;
     return {
       id: room.id,
       name: room.name || room.id,
@@ -34,6 +45,7 @@ export function buildFloorplanState(config = {}, entities = {}) {
       humidity: valueOf(entities[room.humidity || found.humidity]),
       presence: presenceEntity ? presenceEntity.state === 'on' : null,
       climate: climateEntity?.state || null,
+      devices: [asDevice('presence', presenceEntity), asDevice('climate', climateEntity), asDevice('curtain', curtainEntity), asDevice('media', mediaEntity)].filter(Boolean),
     };
   });
   const configuredLights = config.lights || [];
@@ -49,7 +61,18 @@ export function buildFloorplanState(config = {}, entities = {}) {
     onColor: light.onColor || '#ffd391',
     offColor: light.offColor || '#24262b',
   }));
-  return { rooms, lights };
+  const vacuumEntity = entities[config.vacuum] || Object.values(entities).find((entity) => entity.entity_id?.startsWith('vacuum.'));
+  const vacuum = vacuumEntity ? {
+    type: 'vacuum',
+    entityId: vacuumEntity.entity_id,
+    state: vacuumEntity.state,
+    available: !['unknown', 'unavailable'].includes(vacuumEntity.state),
+    active: ['cleaning', 'returning'].includes(vacuumEntity.state),
+    error: vacuumEntity.state === 'error',
+  } : null;
+  const allDevices = [...rooms.flatMap((room) => room.devices), ...(vacuum ? [vacuum] : [])];
+  const alerts = allDevices.filter((device) => !device.available || device.error).map((device) => ({ id: device.entityId, type: device.type, state: device.state }));
+  return { rooms, lights, vacuum, alerts };
 }
 
 export function entityForObject(object, lights = []) {
@@ -68,6 +91,26 @@ export function roomForObject(object, rooms = []) {
   while (current) {
     for (const room of rooms) {
       if (room.id === current.userData?.roomId || room.objectNames.includes(current.name)) return room;
+    }
+    current = current.parent;
+  }
+  return null;
+}
+
+export function deviceForObject(object, rooms = [], globalDevices = []) {
+  let current = object;
+  while (current) {
+    if (current.userData?.deviceType && current.userData?.roomId) {
+      for (const device of globalDevices) {
+        if (device?.type === current.userData.deviceType) return device;
+      }
+      for (const room of rooms) {
+        if (room.id !== current.userData.roomId) continue;
+        for (const device of room.devices) {
+          if (device.type === current.userData.deviceType) return device;
+        }
+      }
+      return null;
     }
     current = current.parent;
   }
