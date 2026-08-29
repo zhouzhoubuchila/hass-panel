@@ -1,12 +1,12 @@
 export const D_PLAN_ROOMS = [
-  { id: 'living_dining', name: '客餐厅', x: -3, z: 0.58, width: 5, depth: 4.45, color: '#d8d3c8', lightObject: 'Light_LivingDining' },
-  { id: 'balcony', name: '阳台', x: -3, z: 3.55, width: 5, depth: 1.5, color: '#b9c4c3', lightObject: 'Light_Balcony' },
-  { id: 'kitchen', name: '厨房', x: -1.88, z: -2.98, width: 2.55, depth: 2.65, color: '#b8b3a8', lightObject: 'Light_Kitchen' },
-  { id: 'guest_bath', name: '公卫', x: 0.23, z: -2.98, width: 1.65, depth: 2.65, color: '#87949a', lightObject: 'Light_GuestBath' },
-  { id: 'north_bedroom', name: '北卧室', x: 2.38, z: -2.98, width: 2.65, depth: 2.65, color: '#a8845f', lightObject: 'Light_NorthBedroom' },
-  { id: 'primary_bath', name: '主卫', x: 4.58, z: -2.93, width: 1.75, depth: 2.75, color: '#87949a', lightObject: 'Light_PrimaryBath' },
-  { id: 'west_bedroom', name: '次卧', x: 0.9, z: 0.08, width: 2.8, depth: 3.45, color: '#a8845f', lightObject: 'Light_WestBedroom' },
-  { id: 'east_bedroom', name: '主卧', x: 3.9, z: 0.08, width: 3.2, depth: 3.45, color: '#a8845f', lightObject: 'Light_EastBedroom' },
+  { id: 'living_dining', name: '客餐厅', aliases: ['客餐厅', '客厅', 'living room', 'living'], x: -3, z: 0.58, width: 5, depth: 4.45, color: '#d8d3c8', lightObject: 'Light_LivingDining' },
+  { id: 'balcony', name: '阳台', aliases: ['阳台', 'balcony'], x: -3, z: 3.55, width: 5, depth: 1.5, color: '#b9c4c3', lightObject: 'Light_Balcony' },
+  { id: 'kitchen', name: '厨房', aliases: ['厨房', 'kitchen'], x: -1.88, z: -2.98, width: 2.55, depth: 2.65, color: '#b8b3a8', lightObject: 'Light_Kitchen' },
+  { id: 'guest_bath', name: '公卫', aliases: ['公卫', '客卫', '次卫', 'guest bath'], x: 0.23, z: -2.98, width: 1.65, depth: 2.65, color: '#87949a', lightObject: 'Light_GuestBath' },
+  { id: 'north_bedroom', name: '北卧室', aliases: ['北卧', '书房', 'bedroom 3', 'bedroom_3'], x: 2.38, z: -2.98, width: 2.65, depth: 2.65, color: '#a8845f', lightObject: 'Light_NorthBedroom' },
+  { id: 'primary_bath', name: '主卫', aliases: ['主卫', 'primary bath', 'master bath'], x: 4.58, z: -2.93, width: 1.75, depth: 2.75, color: '#87949a', lightObject: 'Light_PrimaryBath' },
+  { id: 'west_bedroom', name: '次卧', aliases: ['次卧', '儿童房', 'bedroom 2', 'bedroom_2'], x: 0.9, z: 0.08, width: 2.8, depth: 3.45, color: '#a8845f', lightObject: 'Light_WestBedroom' },
+  { id: 'east_bedroom', name: '主卧', aliases: ['主卧', 'primary bedroom', 'master bedroom'], x: 3.9, z: 0.08, width: 3.2, depth: 3.45, color: '#a8845f', lightObject: 'Light_EastBedroom' },
 ];
 
 // Wall segments follow the supplied D-plan drawing. Units are metres.
@@ -25,7 +25,7 @@ export function resolveDPlanConfig(config = {}) {
     layout: 'd99',
     camera: { position: [10.8, 12.5, 12.8], target: [0, 0, 0], ...(config.camera || {}) },
     ...config,
-    rooms: config.rooms?.length ? config.rooms : D_PLAN_ROOMS.map(({ id, name }) => ({ id, name, objectNames: [`Room_${id}`] })),
+    rooms: config.rooms?.length ? config.rooms : D_PLAN_ROOMS.map(({ id, name, aliases, lightObject }) => ({ id, name, aliases, lightObject, objectNames: [`Room_${id}`] })),
     lights: config.lights || [],
   };
 }
@@ -73,6 +73,7 @@ export function createProceduralDPlan(THREE) {
       new THREE.MeshStandardMaterial({ color: room.color, roughness: 0.78, metalness: 0.02 }),
     );
     floor.name = `Room_${room.id}`;
+    floor.userData.roomId = room.id;
     floor.position.set(room.x, 0.02, room.z);
     floor.receiveShadow = true;
     root.add(floor);
@@ -82,10 +83,13 @@ export function createProceduralDPlan(THREE) {
       new THREE.MeshStandardMaterial({ color: '#efe3c7', emissive: '#24262b', emissiveIntensity: 0.08 }),
     );
     light.name = room.lightObject;
+    light.userData.roomId = room.id;
     light.position.set(room.x, 0.13, room.z);
     root.add(light);
 
     const label = makeLabel(THREE, room.name);
+    label.name = `Label_${room.id}`;
+    label.userData.roomId = room.id;
     label.position.set(room.x, 0.72, room.z);
     root.add(label);
   });
