@@ -1,14 +1,14 @@
+import os
 import sys
 sys.path.append('.')
 import uvicorn
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from hass_panel.core.middlewares import proc_custom_exception
 from hass_panel.routers import update, user_config, common, auth, users, hass, daily_quote, onvif_ctl
 from hass_panel.core.initial import lifespan
 from hass_panel.utils.config import cfg
-from loguru import logger
 ROUTERS = [
     common.router,
     update.router,
@@ -33,13 +33,15 @@ for r in ROUTERS:
     app.include_router(r)
 
 # MIDDLEWARE
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
+cors_origins = [origin.strip() for origin in os.environ.get("HASS_PANEL_CORS_ORIGINS", "").split(",") if origin.strip()]
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
 app.add_middleware(BaseHTTPMiddleware, dispatch=proc_custom_exception)
 
 
