@@ -1,14 +1,10 @@
 import '@ant-design/v5-patch-for-react-19';
 import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import { useMediaQuery } from 'react-responsive';
 import { HassConnect } from '@hakit/core';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 import { LanguageProvider } from './i18n/LanguageContext';
-import Bottom from './components/Bottom';
-// import Sidebar from './components/Sidebar';
-import Home from './pages/home';
-import AppRoutes from './routes';
+import HomeOsAppShell from './home-os/app/HomeOsAppShell';
 import './App.css';
 import { ConfigProvider, theme as antdTheme, message } from 'antd';
 import Login from './pages/login';
@@ -18,12 +14,10 @@ import Loading from './components/Loading';
 
 // 将需要使用 useNavigate 的逻辑移到单独的组件中
 function MainContent() {
-  const [sidebarVisible, setSidebarVisible] = useState(false);
   const [hassConfig, setHassConfig] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
-  const isDesktop = useMediaQuery({ minWidth: 768 });
 
   const checkAuth = useCallback(async () => {
     if (!localStorage.getItem('hass_panel_token')) {
@@ -106,13 +100,7 @@ function MainContent() {
                     await updateHassConfig();
                   }}
                 >
-                  <div className="App">
-                    <Routes>
-                      <Route path="/" element={<Home sidebarVisible={sidebarVisible} setSidebarVisible={setSidebarVisible} />} />
-                      {AppRoutes({sidebarVisible, setSidebarVisible})}
-                    </Routes>
-                    {!isDesktop && <Bottom />}
-                  </div>
+                  <HomeOsAppShell />
                 </HassConnect>
               } />
             )}
