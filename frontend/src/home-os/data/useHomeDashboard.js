@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useStore } from '@hakit/core';
+import { useHass } from '@hakit/core';
 import { configApi } from '../../utils/api';
 import { buildDashboardModel } from './dashboardModel';
 
 export default function useHomeDashboard() {
+  const { useStore } = useHass();
   const entities = useStore((state) => state.entities);
   const ready = useStore((state) => state.ready);
   const [config, setConfig] = useState({});
@@ -13,5 +14,6 @@ export default function useHomeDashboard() {
     configApi.getConfig().then((response) => { if (active && response.code === 200) setConfig(response.data || {}); }).catch(() => { if (active) setConfigError(true); });
     return () => { active = false; };
   }, []);
-  return useMemo(() => ({ ...buildDashboardModel(entities || {}, config), ready: Boolean(ready), configError }), [entities, config, ready, configError]);
+  return useMemo(() => ({ ...buildDashboardModel(entities || {}, config), config, ready: Boolean(ready), configError }), [entities, config, ready, configError]);
 }
+
