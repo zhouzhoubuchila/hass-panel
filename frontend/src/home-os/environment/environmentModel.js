@@ -9,6 +9,12 @@ export function buildCalendarModel(date = new Date()) {
   return { lunarDate: lunar.toString(), yearGanZhi: lunar.getYearInGanZhi(), zodiac: lunar.getYearShengXiao(), jieQi: lunar.getJieQi() || lunar.getNextJieQi()?.getName() || null, jieQiIsToday: Boolean(lunar.getJieQi()), suitable: lunar.getDayYi().slice(0, 5), avoid: lunar.getDayJi().slice(0, 5) };
 }
 
+export function evaluateComfort({ temperature, humidity, aqi }, settings = {}) {
+  if (temperature === null || humidity === null) return null;
+  const { temperatureMin = 20, temperatureMax = 26, humidityMin = 40, humidityMax = 65, aqiMax = 100 } = settings;
+  return temperature >= temperatureMin && temperature <= temperatureMax && humidity >= humidityMin && humidity <= humidityMax && (aqi === null || aqi <= aqiMax);
+}
+
 export function buildEnvironmentModel(entities = {}, config = {}, date = new Date()) {
   const mapping = resolveHomeOsMapping(entities, config);
   const explicit = config.homeOs?.entities || {};
@@ -22,7 +28,7 @@ export function buildEnvironmentModel(entities = {}, config = {}, date = new Dat
   const aqi = numeric(aqiEntity?.state ?? attrs.aqi);
   const uv = numeric(uvEntity?.state ?? attrs.uv_index);
   const precipitation = numeric(rainEntity?.state ?? attrs.precipitation);
-  const comfort = temperature === null || humidity === null ? null : temperature >= 20 && temperature <= 26 && humidity >= 40 && humidity <= 65 && (aqi === null || aqi <= 100);
+  const comfort = evaluateComfort({ temperature, humidity, aqi }, config.homeOs?.comfort || {});
   return { weather: mapping.weather ? { condition: mapping.weather.state, name: attrs.friendly_name, temperature, apparentTemperature: numeric(attrs.apparent_temperature), humidity, pressure: numeric(attrs.pressure), windSpeed: numeric(attrs.wind_speed), visibility: numeric(attrs.visibility) } : null, air: { aqi, uv, precipitation }, sun: { sunrise: sun?.attributes?.next_rising || null, sunset: sun?.attributes?.next_setting || null }, moon: mapping.moon?.state || null, comfort, calendar: buildCalendarModel(date) };
 }
 
@@ -38,4 +44,3 @@ export function environmentAdvice(model, language = 'zh') {
   if (!messages.length) messages.push(language === 'zh' ? '体感舒适，适合日常出行' : 'comfortable for everyday travel');
   return language === 'zh' ? `今日建议：${messages.join('、')}` : `Today: ${messages.join(', ')}`;
 }
-
