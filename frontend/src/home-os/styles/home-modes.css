@@ -9,4 +9,5 @@
 .home-os-mode-bar button.is-active { border-color:rgba(85,185,131,.35);color:#55b983; }
 .home-os-mode-bar button.is-pending { border-color:var(--home-os-accent);background:var(--home-os-accent-soft);color:var(--home-os-accent); }
 .home-os-mode-bar button:disabled { cursor:not-allowed;opacity:.35; }
+.home-os-mode-bar nav .home-os-mode-settings-link { width:32px;padding-inline:0;border-style:dashed;color:var(--color-text-light); }
 @media(max-width:767px){.home-os-mode-bar{align-items:flex-start;flex-direction:column}.home-os-mode-bar nav{justify-content:flex-start}.home-os-mode-bar button{padding:7px 8px}}
