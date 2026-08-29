@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, CloudSun, Droplets, MapPin, Moon, Thermometer, Users } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 import FloorplanPlaceholder from '../floorplan/FloorplanPlaceholder';
 import useHomeDashboard from '../data/useHomeDashboard';
 import { getTravelAdvice } from '../data/dashboardModel';
@@ -11,6 +12,7 @@ const moonIcons = { new_moon: '●', waxing_crescent: '◔', first_quarter: '◑
 
 export default function HomePage() {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const dashboard = useHomeDashboard();
   const [now, setNow] = useState(new Date());
   useEffect(() => { const timer = window.setInterval(() => setNow(new Date()), 30000); return () => window.clearInterval(timer); }, []);
@@ -28,7 +30,7 @@ export default function HomePage() {
       <FloorplanPlaceholder config={dashboard.config?.homeOs?.floorplan} />
       <aside className="home-os-summary-rail">
         <section className={`home-os-panel home-os-attention ${dashboard.attention.length ? 'has-items' : 'is-clear'}`}>
-          <div className="home-os-panel-title"><span>{dashboard.attention.length ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}{language === 'zh' ? '需要你处理' : 'Needs attention'}</span><b>{dashboard.attention.length}</b></div>
+          <div className="home-os-panel-title"><span>{dashboard.attention.length ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}{language === 'zh' ? '需要你处理' : 'Needs attention'}</span><button type="button" onClick={() => navigate('/attention')}>{language === 'zh' ? '查看全部' : 'View all'} · {dashboard.attention.length}</button></div>
           {dashboard.attention.length ? <div className="home-os-attention-list">{dashboard.attention.slice(0, 4).map((item) => <div className={`home-os-attention-item is-${item.severity}`} key={item.id}><span /><div><strong>{item.title}</strong><small>{item.description}</small></div></div>)}</div> : <><strong>{language === 'zh' ? '家庭状态正常' : 'Household status normal'}</strong><p>{language === 'zh' ? '门窗、设备电量、系统更新和关键实体均无异常。' : 'Openings, batteries, updates and mapped entities look normal.'}</p></>}
         </section>
         <section className="home-os-panel home-os-weather-panel">
