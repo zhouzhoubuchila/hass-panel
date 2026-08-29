@@ -127,11 +127,12 @@ function InitializePage() {
                 body: JSON.stringify(requestData),
             });
 
-            if (response.ok) {
+            const data = await response.json();
+
+            if (response.ok && data.code === 200) {
                 message.success(t('initialize.initSuccess'));
-                navigate('/login');
+                navigate('/login', { replace: true });
             } else {
-                const data = await response.json();
                 if (data.code === 401) {
                     message.error(t('initialize.invalidHassUrl'));
                 } else if (data.code === 402) {
