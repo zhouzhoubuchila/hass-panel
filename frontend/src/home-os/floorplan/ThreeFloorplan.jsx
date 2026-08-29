@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useHass } from '@hakit/core';
-import { Droplets, Lightbulb, Thermometer } from 'lucide-react';
+import { Droplets, Lightbulb, Settings2, Thermometer } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { buildFloorplanState, entityForObject, roomForObject } from './floorplanBinding';
 import { createProceduralDPlan } from './proceduralDPlan';
@@ -11,6 +12,7 @@ export default function ThreeFloorplan({ config }) {
   const { callService, useStore } = useHass();
   const entities = useStore((state) => state.entities);
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const [status, setStatus] = useState('loading');
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   const floorplanState = useMemo(() => buildFloorplanState(config, entities || {}), [config, entities]);
@@ -134,6 +136,7 @@ export default function ThreeFloorplan({ config }) {
     <div ref={containerRef} className="home-os-three-canvas" onClick={handlePointer} />
     {status !== 'ready' && <div className="home-os-three-status"><strong>{status === 'error' ? (language === 'zh' ? '模型加载失败' : 'Model failed to load') : (language === 'zh' ? '正在加载 3D 户型' : 'Loading 3D floorplan')}</strong><small>{status === 'error' ? config.modelUrl : 'GLB / GLTF'}</small></div>}
     <div className="home-os-floorplan-readouts">
+      <button type="button" onClick={() => navigate('/floorplan-settings')}><Settings2 size={14} />{language === 'zh' ? '实体映射' : 'Map entities'}</button>
       {floorplanState.rooms.slice(0, 3).map((room) => <div key={room.id}><strong>{room.name}</strong><span><Thermometer size={13} />{room.temperature ?? '—'}°</span><span><Droplets size={13} />{room.humidity ?? '—'}%</span></div>)}
       {floorplanState.lights.slice(0, 3).map((light) => <button type="button" disabled={!light.available} onClick={() => callService({ domain: 'light', service: 'toggle', target: { entity_id: light.entityId } })} key={light.entityId}><Lightbulb size={14} />{light.entityId.split('.').pop()}<i className={light.isOn ? 'is-on' : ''} /></button>)}
     </div>
