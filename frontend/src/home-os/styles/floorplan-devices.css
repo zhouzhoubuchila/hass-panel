@@ -25,6 +25,9 @@
   background: var(--home-os-surface-muted);
   color: var(--color-text-primary);
 }
+.home-os-mapping-summary { display:flex;gap:8px;margin:0 0 12px; }
+.home-os-mapping-summary span { padding:6px 9px;border-radius:9px;background:var(--home-os-surface-muted);color:var(--color-text-light);font-size:9px; }
+.home-os-room-mapping-fields em { display:block;max-width:100%;margin:4px 2px 0;overflow:hidden;text-overflow:ellipsis;color:#55b983;font-size:8px;font-style:normal;white-space:nowrap; }
 @media (max-width: 767px) {
   .home-os-global-device-mapping { align-items: stretch; flex-direction: column; }
   .home-os-global-device-mapping label { min-width: 0; }
