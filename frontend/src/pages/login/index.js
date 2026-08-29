@@ -44,14 +44,15 @@ function Login() {
   }, [themeMenuVisible]);
 
   useEffect(() => {
-    // 检查本地存储中是否有保存的凭据
+    // 只恢复用户名；旧版本保存过的明文密码会在这里被立即清除。
     const savedCredentials = localStorage.getItem('hass_panel_credentials');
     if (savedCredentials) {
       try {
-        const { username, password, remember } = JSON.parse(savedCredentials);
+        const { username, remember } = JSON.parse(savedCredentials);
         if (remember) {
-          form.setFieldsValue({ username, password, remember });
+          form.setFieldsValue({ username, remember });
           setRememberMe(remember);
+          localStorage.setItem('hass_panel_credentials', JSON.stringify({ username, remember: true }));
         }
       } catch (error) {
         console.error('Failed to parse saved credentials', error);
@@ -108,11 +109,10 @@ function Login() {
       // 保存记住密码选项到本地存储
       localStorage.setItem('hass_panel_remember_option', JSON.stringify(values.remember));
       
-      // 根据记住我选项决定是否保存凭据
+      // 只保存用户名，绝不把原始密码写入浏览器存储。
       if (values.remember) {
         localStorage.setItem('hass_panel_credentials', JSON.stringify({
           username: values.username,
-          password: values.password,
           remember: true
         }));
       } else {
@@ -166,7 +166,7 @@ function Login() {
 
           <Form.Item name="remember" valuePropName="checked">
             <Checkbox onChange={(e) => setRememberMe(e.target.checked)}>
-              {t('login.rememberPassword')}
+              {t('login.rememberUsername')}
             </Checkbox>
           </Form.Item>
 
