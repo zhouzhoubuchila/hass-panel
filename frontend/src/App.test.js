@@ -1,9 +1,14 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { primaryNavigation } from './home-os/app/navigation';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+jest.mock('lucide-react', () => ({
+  CloudSun: () => null,
+  Home: () => null,
+  Server: () => null,
+  Users: () => null,
+  Zap: () => null,
+}));
+
+test('Home OS exposes five unique primary routes', () => {
+  expect(primaryNavigation).toHaveLength(5);
+  expect(new Set(primaryNavigation.map((item) => item.path)).size).toBe(5);
 });
