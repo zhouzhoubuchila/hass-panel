@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, CloudSun, Droplets, MapPin, Moon, Thermometer, Users } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,8 @@ import FloorplanPlaceholder from '../floorplan/FloorplanPlaceholder';
 import useHomeDashboard from '../data/useHomeDashboard';
 import { getTravelAdvice } from '../data/dashboardModel';
 import HomeModeBar from '../components/HomeModeBar';
+
+const HomeCalendarMeta = lazy(() => import('../components/HomeCalendarMeta'));
 
 const weatherNames = { sunny: ['晴', 'Sunny'], cloudy: ['多云', 'Cloudy'], partlycloudy: ['局部多云', 'Partly cloudy'], rainy: ['有雨', 'Rainy'], 'clear-night': ['晴夜', 'Clear night'], fog: ['有雾', 'Foggy'], windy: ['有风', 'Windy'], lightning: ['雷雨', 'Thunderstorm'], snowy: ['有雪', 'Snowy'] };
 const moonIcons = { new_moon: '●', waxing_crescent: '◔', first_quarter: '◑', waxing_gibbous: '◕', full_moon: '○', waning_gibbous: '◕', last_quarter: '◐', waning_crescent: '◔' };
@@ -22,7 +24,7 @@ export default function HomePage() {
 
   return <div className="home-os-home-page">
     <section className="home-os-greeting">
-      <div><span>{now.toLocaleDateString(locale, { month: 'long', day: 'numeric', weekday: 'long' })}</span><h1>{now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}</h1><p className="home-os-daily-summary">{summary}</p></div>
+      <div><span>{now.toLocaleDateString(locale, { month: 'long', day: 'numeric', weekday: 'long' })}{language === 'zh' && <Suspense fallback={null}><HomeCalendarMeta date={now} /></Suspense>}</span><h1>{now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', hour12: false })}</h1><p className="home-os-daily-summary">{summary}</p></div>
       <div className={`home-os-connection ${dashboard.ready ? 'is-ready' : 'is-waiting'}`}><span /><div><strong>{dashboard.ready ? (language === 'zh' ? 'Home Assistant 已连接' : 'Home Assistant connected') : (language === 'zh' ? '正在连接 Home Assistant' : 'Connecting to Home Assistant')}</strong><small>{language === 'zh' ? '实体状态实时同步' : 'Entity states update live'}</small></div></div>
     </section>
     <HomeModeBar config={dashboard.config} />
@@ -35,7 +37,7 @@ export default function HomePage() {
         </section>
         <section className="home-os-panel home-os-weather-panel">
           <div className="home-os-panel-title"><span><CloudSun size={20} />{language === 'zh' ? '今日环境' : 'Today outside'}</span></div>
-          {dashboard.weather ? <><div className="home-os-weather-main"><div><strong>{weatherLabel}</strong><small><MapPin size={13} />{dashboard.weather.friendlyName || (language === 'zh' ? '家庭所在地' : 'Home')}</small></div><b>{dashboard.weather.temperature ?? '—'}°</b></div><div className="home-os-metrics"><span><Thermometer size={15} />{dashboard.weather.apparentTemperature ?? dashboard.weather.temperature ?? '—'}°</span><span><Droplets size={15} />{dashboard.weather.humidity ?? '—'}%</span><span><Moon size={15} />{moonIcons[dashboard.moon] || '—'}</span></div><p className="home-os-advice">{getTravelAdvice(dashboard.weather, language)}</p></> : <div className="home-os-empty-row"><MapPin size={18} /><span>{language === 'zh' ? '等待 weather 实体映射' : 'Waiting for a weather entity mapping'}</span></div>}
+          {dashboard.weather ? <><div className="home-os-weather-main"><div><strong>{weatherLabel}</strong><small><MapPin size={13} />{dashboard.weather.friendlyName || (language === 'zh' ? '家庭所在地' : 'Home')}</small></div><b>{dashboard.weather.temperature ?? '—'}°</b></div><div className="home-os-metrics"><span><Thermometer size={15} />{dashboard.weather.apparentTemperature ?? dashboard.weather.temperature ?? '—'}°</span><span><Droplets size={15} />{dashboard.weather.humidity ?? '—'}%</span><span><Moon size={15} />{moonIcons[dashboard.moon] || '—'}</span></div>{dashboard.weather.dailyHigh !== null && <p className="home-os-forecast-meta">{language === 'zh' ? `今日 ${dashboard.weather.dailyLow ?? '—'}° / ${dashboard.weather.dailyHigh}°${dashboard.weather.precipitationProbability !== null ? ` · 降雨 ${dashboard.weather.precipitationProbability}%` : ''}` : `Today ${dashboard.weather.dailyLow ?? '—'}° / ${dashboard.weather.dailyHigh}°${dashboard.weather.precipitationProbability !== null ? ` · Rain ${dashboard.weather.precipitationProbability}%` : ''}`}</p>}<p className="home-os-advice">{getTravelAdvice(dashboard.weather, language)}</p></> : <div className="home-os-empty-row"><MapPin size={18} /><span>{language === 'zh' ? '等待 weather 实体映射' : 'Waiting for a weather entity mapping'}</span></div>}
         </section>
         <section className="home-os-panel">
           <div className="home-os-panel-title"><span><Users size={20} />{language === 'zh' ? '家庭状态' : 'Household'}</span></div>
