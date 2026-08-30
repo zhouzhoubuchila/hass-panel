@@ -1,6 +1,6 @@
 {
   "name": "Home OS Dev",
-  "version": "1.5.0-homeos.2",
+  "version": "1.5.0-homeos.3",
   "slug": "home_os_dev",
   "description": "Home OS 家庭中枢开发预览版：五大页面、3D 户型、环境生活、家庭安全、能源与 Homelab。",
   "url": "https://github.com/zhouzhoubuchila/hass-panel/tree/home-os-dev",
