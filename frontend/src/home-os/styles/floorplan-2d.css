@@ -8,8 +8,15 @@
 .home-os-floorplan--2d svg .home-os-room-value { fill: rgba(24,29,26,.7); font-size: .17px; font-weight: 500; }
 .home-os-svg-walls { pointer-events: none; }
 .home-os-svg-walls line { stroke: #f3efe6; stroke-width: .14; stroke-linecap: square; }
+.home-os-svg-furniture { pointer-events: none; }
+.home-os-svg-furniture rect { fill: rgba(45,55,51,.24); stroke: rgba(255,255,255,.38); stroke-width: .025; }
+.home-os-svg-furniture rect[data-kind="bed"] { fill: rgba(77,112,124,.34); }
+.home-os-svg-furniture rect[data-kind="planter"] { fill: rgba(72,104,70,.44); }
+.home-os-svg-furniture rect[data-kind="bath"] { fill: rgba(224,235,234,.65); }
+.home-os-svg-north { pointer-events:none; }
+.home-os-svg-north path { fill:none;stroke:var(--home-os-accent);stroke-width:.08;stroke-linecap:round;stroke-linejoin:round; }
+.home-os-svg-north text { fill:var(--home-os-accent);font-size:.22px; }
 .home-os-svg-alert { fill: #e36060; stroke: #fff; stroke-width: .035; }
 .home-os-2d-light { display:flex;align-items:center;justify-content:center;gap:5px;margin-top:10px;padding:7px;border:1px solid var(--color-border);border-radius:9px;background:var(--home-os-surface-muted);color:var(--color-text-secondary);font-size:9px;cursor:pointer; }
 .home-os-2d-light.is-on { color:#d99532;box-shadow:inset 0 0 16px rgba(255,211,145,.16); }
 @media (max-width: 767px) { .home-os-floorplan--2d { padding: 60px 14px 42px; } .home-os-floorplan--2d svg { max-height: 330px; } }
-

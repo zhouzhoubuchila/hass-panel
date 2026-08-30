@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useHass } from '@hakit/core';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { buildFloorplanState } from './floorplanBinding';
-import { D_PLAN_ROOMS, D_PLAN_WALLS } from './proceduralDPlan';
+import { D_PLAN_FURNITURE, D_PLAN_ROOMS, D_PLAN_WALLS } from './proceduralDPlan';
 import '../styles/floorplan-2d.css';
 
 export default function Floorplan2D({ config, onUse3D }) {
@@ -37,11 +37,12 @@ export default function Floorplan2D({ config, onUse3D }) {
           {alert && <circle className="home-os-svg-alert" cx={room.x + room.width * .34} cy={room.z - room.depth * .32} r=".1" />}
         </g>;
       })}
+      <g className="home-os-svg-furniture">{D_PLAN_FURNITURE.map((item) => <rect x={item.x - item.width / 2} y={item.z - item.depth / 2} width={item.width} height={item.depth} rx=".08" data-kind={item.kind} key={item.id} />)}</g>
       <g className="home-os-svg-walls">{D_PLAN_WALLS.map(([x1, z1, x2, z2], index) => <line x1={x1} y1={z1} x2={x2} y2={z2} key={index} />)}</g>
+      <g className="home-os-svg-north"><path d="M -5.25 -3.55 L -5.25 -4.05 M -5.25 -4.05 L -5.4 -3.78 M -5.25 -4.05 L -5.1 -3.78" /><text x="-5.25" y="-4.18">N</text></g>
     </svg>
     {state.alerts.length > 0 && <button type="button" className="home-os-floorplan-alert" onClick={() => setSelectedRoomId(state.alerts[0].roomId)}><AlertTriangle size={13} />{language === 'zh' ? `${state.alerts.length} 个设备异常` : `${state.alerts.length} device alerts`}</button>}
     {selectedRoom && <aside className="home-os-room-focus"><button type="button" className="home-os-room-close" onClick={() => setSelectedRoomId(null)}><X size={13} /></button><strong>{selectedRoom.name}</strong><span>{selectedRoom.temperature ?? '—'}° · {selectedRoom.humidity ?? '—'}%</span><small>{selectedDevices.length ? selectedDevices.map((device) => `${device.type}: ${device.state}`).join(' · ') : (language === 'zh' ? '暂无映射设备' : 'No mapped devices')}</small>{selectedLight && <button type="button" className={`home-os-2d-light ${selectedLight.isOn ? 'is-on' : ''}`} disabled={!selectedLight.available} onClick={() => callService({ domain: 'light', service: 'toggle', target: { entity_id: selectedLight.entityId } })}><Lightbulb size={13} />{language === 'zh' ? '切换主灯' : 'Toggle light'}</button>}</aside>}
-    <span className="home-os-floorplan-badge">D · 99.91 M² · 2D</span>
+    <span className="home-os-floorplan-badge">N ↑ · D · 99.91 M² · 2D</span>
   </section>;
 }
-

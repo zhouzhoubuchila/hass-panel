@@ -177,7 +177,6 @@ export default function ThreeFloorplan({ config, onUse2D }) {
     </div>
     {floorplanState.alerts.length > 0 && <button type="button" className="home-os-floorplan-alert" onClick={() => setSelectedRoomId(floorplanState.alerts[0].roomId)}><AlertTriangle size={13} />{language === 'zh' ? `${floorplanState.alerts.length} 个设备异常` : `${floorplanState.alerts.length} device alerts`}</button>}
     {selectedRoom && <aside className="home-os-room-focus"><button type="button" className="home-os-room-close" onClick={() => setSelectedRoomId(null)}><X size={13} /></button><strong>{selectedRoom.name}</strong><span>{selectedRoom.temperature ?? '—'}° · {selectedRoom.humidity ?? '—'}%</span><small>{selectedRoom.presence === null ? (language === 'zh' ? '未发现人体传感器' : 'No presence sensor') : selectedRoom.presence ? (language === 'zh' ? '有人活动' : 'Occupied') : (language === 'zh' ? '无人活动' : 'Clear')}</small><div className="home-os-room-devices">{selectedDevices.map((device) => <button type="button" disabled={!device.available || device.type === 'presence'} className={device.active ? 'is-active' : ''} onClick={() => controlDevice(device)} key={device.type}>{device.type === 'climate' ? <AirVent size={13} /> : device.type === 'media' ? <Radio size={13} /> : <CircleDot size={13} />}{device.type}</button>)}</div></aside>}
-    <span className="home-os-floorplan-badge">{config.modelUrl ? 'FLOORPLAN' : 'D · 99.91 M²'} · LIVE</span>
+    <span className="home-os-floorplan-badge">N ↑ · {config.modelUrl ? 'FLOORPLAN' : 'D · 99.91 M²'} · LIVE</span>
   </section>;
 }
-

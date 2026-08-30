@@ -9,6 +9,31 @@ export const D_PLAN_ROOMS = [
   { id: 'east_bedroom', name: '主卧', aliases: ['主卧', 'primary bedroom', 'master bedroom'], x: 3.9, z: 0.08, width: 3.2, depth: 3.45, color: '#a8845f', lightObject: 'Light_EastBedroom' },
 ];
 
+// Three joined foundations preserve the two recesses visible in the supplied
+// D-plan instead of filling the whole 11 x 8.6 m bounding rectangle.
+export const D_PLAN_FOUNDATIONS = [
+  { x: -3, z: 1.325, width: 5, depth: 5.95 },
+  { x: 1.175, z: -2.975, width: 8.65, depth: 2.65 },
+  { x: 2.5, z: 0.075, width: 6, depth: 3.45 },
+];
+
+// Lightweight furniture makes each zone recognisable while keeping the model
+// fast enough for Home Assistant tablets and wall panels.
+export const D_PLAN_FURNITURE = [
+  { id: 'living_tv', roomId: 'living_dining', kind: 'cabinet', x: -5.16, z: 0.15, width: .22, depth: 1.55, height: .32, color: '#6d7470' },
+  { id: 'living_sofa', roomId: 'living_dining', kind: 'sofa', x: -3.82, z: .42, width: 1.65, depth: .72, height: .38, color: '#a7b2ac' },
+  { id: 'living_table', roomId: 'living_dining', kind: 'table', x: -3.58, z: -.52, width: .9, depth: .58, height: .3, color: '#715d49' },
+  { id: 'dining_table', roomId: 'living_dining', kind: 'table', x: -1.45, z: .24, width: 1.18, depth: 1.45, height: .38, color: '#8c7358' },
+  { id: 'kitchen_back', roomId: 'kitchen', kind: 'cabinet', x: -1.88, z: -4.02, width: 1.92, depth: .34, height: .48, color: '#d3cec2' },
+  { id: 'kitchen_side', roomId: 'kitchen', kind: 'cabinet', x: -2.88, z: -3.18, width: .34, depth: 1.34, height: .48, color: '#d3cec2' },
+  { id: 'guest_bath', roomId: 'guest_bath', kind: 'bath', x: .23, z: -3.15, width: .72, depth: 1.15, height: .28, color: '#dce3e2' },
+  { id: 'north_bed', roomId: 'north_bedroom', kind: 'bed', x: 2.42, z: -3.12, width: 1.42, depth: 1.8, height: .32, color: '#a9c0bd' },
+  { id: 'primary_bath', roomId: 'primary_bath', kind: 'bath', x: 4.58, z: -3.0, width: .78, depth: 1.28, height: .28, color: '#dce3e2' },
+  { id: 'west_bed', roomId: 'west_bedroom', kind: 'bed', x: .9, z: .08, width: 1.48, depth: 1.9, height: .34, color: '#89abb4' },
+  { id: 'east_bed', roomId: 'east_bedroom', kind: 'bed', x: 3.9, z: .08, width: 1.72, depth: 1.94, height: .34, color: '#89abb4' },
+  { id: 'balcony_planter', roomId: 'balcony', kind: 'planter', x: -3, z: 4.0, width: 3.3, depth: .32, height: .28, color: '#71836d' },
+];
+
 // Wall segments follow the supplied D-plan drawing. Units are metres.
 export const D_PLAN_WALLS = [
   [-5.5, -1.65, -3.15, -1.65], [-3.15, -1.65, -3.15, -4.3], [-3.15, -4.3, 5.5, -4.3],
@@ -23,7 +48,7 @@ export const D_PLAN_WALLS = [
 export function resolveDPlanConfig(config = {}) {
   return {
     layout: 'd99',
-    camera: { position: [10.8, 12.5, 12.8], target: [0, 0, 0], ...(config.camera || {}) },
+    camera: { position: [0, 16.5, 10.2], target: [0, 0, 0], ...(config.camera || {}) },
     ...config,
     rooms: config.rooms?.length ? config.rooms : D_PLAN_ROOMS.map(({ id, name, aliases, lightObject }) => ({ id, name, aliases, lightObject, objectNames: [`Room_${id}`] })),
     lights: config.lights || [],
@@ -45,14 +70,14 @@ const makeLabel = (THREE, text) => {
     context.fillRect(18, 16, 220, 62);
   }
   context.fillStyle = '#f7f4ed';
-  context.font = '600 30px sans-serif';
+  context.font = '600 34px sans-serif';
   context.textAlign = 'center';
   context.textBaseline = 'middle';
   context.fillText(text, 128, 48);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false }));
-  sprite.scale.set(1.65, 0.62, 1);
+  sprite.scale.set(1.92, 0.72, 1);
   return sprite;
 };
 
@@ -60,12 +85,14 @@ export function createProceduralDPlan(THREE) {
   const root = new THREE.Group();
   root.name = 'HomeOS_D99';
 
-  const base = new THREE.Mesh(
-    new THREE.BoxGeometry(11.35, 0.16, 8.95),
-    new THREE.MeshStandardMaterial({ color: '#4d514f', roughness: 0.92 }),
-  );
-  base.position.y = -0.1;
-  root.add(base);
+  const foundationMaterial = new THREE.MeshStandardMaterial({ color: '#4d514f', roughness: 0.92 });
+  D_PLAN_FOUNDATIONS.forEach((section, index) => {
+    const base = new THREE.Mesh(new THREE.BoxGeometry(section.width + .16, .16, section.depth + .16), foundationMaterial);
+    base.name = `Foundation_${index + 1}`;
+    base.position.set(section.x, -.1, section.z);
+    base.receiveShadow = true;
+    root.add(base);
+  });
 
   D_PLAN_ROOMS.forEach((room) => {
     const floor = new THREE.Mesh(
@@ -108,6 +135,19 @@ export function createProceduralDPlan(THREE) {
     });
   });
 
+  D_PLAN_FURNITURE.forEach((item) => {
+    const furniture = new THREE.Mesh(
+      new THREE.BoxGeometry(item.width, item.height, item.depth),
+      new THREE.MeshStandardMaterial({ color: item.color, roughness: .78 }),
+    );
+    furniture.name = `Furniture_${item.id}`;
+    furniture.userData.roomId = item.roomId;
+    furniture.position.set(item.x, item.height / 2 + .09, item.z);
+    furniture.castShadow = true;
+    furniture.receiveShadow = true;
+    root.add(furniture);
+  });
+
   const vacuum = new THREE.Mesh(
     new THREE.CylinderGeometry(0.25, 0.25, 0.11, 32),
     new THREE.MeshStandardMaterial({ color: '#68706e', emissive: '#202523', emissiveIntensity: 0.12, roughness: 0.36 }),
@@ -133,4 +173,3 @@ export function createProceduralDPlan(THREE) {
 
   return root;
 }
-

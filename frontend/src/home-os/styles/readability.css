@@ -1,0 +1,28 @@
+/* Home OS readability pass: designed for desktop, tablet and wall-panel use. */
+.home-os-shell { font-size: 16px; }
+.home-os-shell :where(button,input,select,textarea) { font-size: 13px; }
+.home-os-shell small { font-size: 12px; line-height: 1.5; }
+.home-os-shell p { font-size: 14px; line-height: 1.65; }
+.home-os-shell .home-os-nav-link { min-height: 48px; font-size: 15px; }
+.home-os-shell .home-os-topbar strong { font-size: 17px; }
+.home-os-shell :where(.home-os-eyebrow,.home-os-page-heading>span,.home-os-floorplan-badge) { font-size: 11px; }
+.home-os-shell .home-os-page-heading h1 { font-size: 36px; }
+.home-os-shell .home-os-page-heading p { font-size: 14px; }
+.home-os-shell :where(.home-os-env-title,.home-os-panel-title>span,.home-os-family-card h2,.home-os-energy-grid h2,.home-os-lab-card h2) { font-size: 14px; }
+.home-os-shell :where(.home-os-env-metrics span,.home-os-env-pills span,.home-os-metrics span,.home-os-people span,.home-os-lab-metrics b,.home-os-lab-metrics small,.home-os-energy-grid b,.home-os-energy-grid span) { font-size: 12px; }
+.home-os-shell :where(.home-os-panel>strong,.home-os-attention-item strong,.home-os-weather-main strong) { font-size: 15px; }
+.home-os-shell :where(.home-os-panel>p,.home-os-empty-row,.home-os-attention-item small,.home-os-weather-main small,.home-os-family-count span,.home-os-calendar-card>p,.home-os-almanac span) { font-size: 12px; }
+.home-os-shell .home-os-floorplan-readouts>div,
+.home-os-shell .home-os-floorplan-readouts>button { min-height: 42px; padding-inline: 13px; font-size: 12px; }
+.home-os-shell .home-os-room-focus>span { font-size: 14px; }
+.home-os-shell .home-os-room-focus>small,
+.home-os-shell .home-os-room-devices button { font-size: 11px; }
+.home-os-shell .home-os-panel-title>button { width: auto; min-width: 38px; padding-inline: 10px; font-size: 11px; }
+.home-os-shell .home-os-forecast-meta { font-size: 12px; }
+
+@media (max-width: 767px) {
+  .home-os-shell { font-size: 15px; }
+  .home-os-shell .home-os-page-heading h1 { font-size: 30px; }
+  .home-os-shell .home-os-mobile-nav a { font-size: 11px; }
+  .home-os-shell .home-os-floorplan-readouts>div { display: none; }
+}

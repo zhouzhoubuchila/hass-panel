@@ -9,6 +9,7 @@ import HomeOsRoutes from './HomeOsRoutes';
 import HomeOsErrorBoundary from './HomeOsErrorBoundary';
 import CommandPalette from '../components/CommandPalette';
 import '../styles/home-os.css';
+import '../styles/readability.css';
 
 export default function HomeOsAppShell() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
