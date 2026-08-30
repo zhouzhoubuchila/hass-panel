@@ -42,9 +42,13 @@ RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple \
     pyyaml \
     sqlalchemy \
     pyjwt \
-    passlib[bcrypt] \
+    passlib[bcrypt]==1.7.4 \
+    bcrypt==4.0.1 \
     apscheduler \
     onvif-zeep
+
+# passlib 1.7.4 与 bcrypt 5.x 不兼容；在构建阶段验证初始化所需的哈希链路。
+RUN python3 -c "from passlib.context import CryptContext; c = CryptContext(schemes=['bcrypt']); value = '0' * 32; hashed = c.hash(value); assert c.verify(value, hashed)"
 
 # 创建必要的目录
 RUN mkdir -p /config/hass-panel  # 为SQLite数据库创建目录
