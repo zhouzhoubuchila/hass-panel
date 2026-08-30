@@ -6,7 +6,7 @@ on:
       version:
         description: Image version used by the Home Assistant add-on
         required: true
-        default: 1.5.0-homeos.5
+        default: 1.5.0-homeos.6
 
 permissions:
   contents: read
