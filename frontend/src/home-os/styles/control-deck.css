@@ -1,0 +1,15 @@
+.home-os-control-page{max-width:1900px;padding:20px 22px 30px}
+.home-os-control-deck{display:grid;grid-template-columns:250px minmax(560px,1fr) 270px;gap:14px;align-items:stretch}
+.home-os-control-rail{display:flex;flex-direction:column;gap:12px;min-width:0}
+.home-os-control-clock,.home-os-control-page .home-os-panel,.home-os-control-page .home-os-mode-bar{border:1px solid rgba(255,255,255,.08);background:color-mix(in srgb,var(--home-os-surface) 90%,#0c1113);box-shadow:0 16px 36px rgba(0,0,0,.15)}
+.home-os-control-clock{padding:20px;border-radius:20px}.home-os-control-clock>span{color:var(--color-text-light);font-size:13px}.home-os-control-clock h1{margin:8px 0 0;font-size:44px;font-weight:300;letter-spacing:-.06em}.home-os-control-clock>p{margin:10px 0 16px;color:var(--color-text-secondary);font-size:13px}
+.home-os-control-clock .home-os-connection{padding:10px 11px;background:rgba(255,255,255,.035)}
+.home-os-control-page .home-os-panel{padding:17px;border-radius:18px}.home-os-control-page .home-os-panel-title{margin-bottom:18px}
+.home-os-control-page .home-os-weather-main>b{font-size:32px}.home-os-control-page .home-os-advice{font-size:12px}
+.home-os-control-rail--right .home-os-mode-bar{display:block;margin:0;padding:17px;border-radius:18px}
+.home-os-control-rail--right .home-os-mode-bar>div{margin-bottom:14px}.home-os-control-rail--right .home-os-mode-bar nav{display:grid;grid-template-columns:repeat(2,1fr);justify-content:stretch}
+.home-os-control-rail--right .home-os-mode-bar button{justify-content:center;min-height:40px;font-size:12px}.home-os-control-rail--right .home-os-mode-bar nav .home-os-mode-settings-link{width:auto}
+.home-os-control-rail--right .home-os-attention{flex:1}.home-os-control-rail--right .home-os-attention-list{gap:9px}
+@media(max-width:1380px){.home-os-control-deck{grid-template-columns:220px minmax(500px,1fr) 235px}.home-os-control-page{padding-inline:14px}.home-os-control-clock{padding:16px}.home-os-control-clock h1{font-size:38px}.home-os-control-page .home-os-panel{padding:15px}}
+@media(max-width:1120px){.home-os-control-deck{grid-template-columns:minmax(0,1fr) 250px}.home-os-control-rail--left{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr}.home-os-control-rail--left .home-os-control-clock,.home-os-control-rail--left .home-os-panel{min-height:150px;box-sizing:border-box}}
+@media(max-width:767px){.home-os-control-page{padding:12px 10px 92px}.home-os-control-deck{display:flex;flex-direction:column}.home-os-control-rail--left{display:contents}.home-os-control-clock{order:-2}.home-os-control-page .home-os-floorplan{order:-1}.home-os-control-clock h1{font-size:38px}.home-os-control-clock .home-os-connection{position:absolute;top:88px;right:22px}.home-os-control-clock .home-os-connection small{display:none}.home-os-control-rail--right .home-os-mode-bar nav{grid-template-columns:repeat(3,1fr)}}

@@ -1,0 +1,15 @@
+.home-os-floorplan--rendered{min-height:720px;border-color:rgba(255,255,255,.08);background:#0c1012;box-shadow:0 28px 70px rgba(0,0,0,.38)}
+.home-os-rendered-plan{position:absolute;inset:3% 2% 2%;width:96%;height:95%;object-fit:contain;filter:saturate(.9) contrast(1.06)}
+.home-os-rendered-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 52% 48%,transparent 48%,rgba(4,7,8,.6) 100%),linear-gradient(180deg,rgba(8,12,14,.48),transparent 22%)}
+.home-os-plan-toolbar{position:absolute;z-index:4;top:18px;left:18px;display:flex;gap:8px}
+.home-os-plan-toolbar button{display:flex;align-items:center;gap:7px;min-height:42px;padding:0 13px;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:rgba(14,19,21,.72);backdrop-filter:blur(18px);color:#e9efed;font-size:12px;cursor:pointer}
+.home-os-room-hotspot{position:absolute;z-index:3;display:grid;justify-items:center;min-width:76px;padding:0;border:0;background:none;color:#dbe3e0;transform:translate(-50%,-50%);cursor:pointer;text-shadow:0 2px 7px #000}
+.home-os-room-hotspot>span{display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:rgba(10,15,17,.8);box-shadow:0 5px 18px rgba(0,0,0,.48);transition:.2s ease}
+.home-os-room-hotspot strong{margin-top:6px;font-size:12px}.home-os-room-hotspot small{margin-top:2px;color:rgba(230,238,235,.72);font-size:10px}
+.home-os-room-hotspot:hover>span,.home-os-room-hotspot:focus-visible>span{border-color:#ffc875;transform:scale(1.08)}
+.home-os-room-hotspot.is-on>span{border-color:#ffd38b;background:#f4ad48;color:#1b150d;box-shadow:0 0 18px rgba(255,184,80,.9),0 0 46px rgba(255,169,48,.42)}
+.home-os-room-hotspot.is-on strong{color:#ffe1aa}.home-os-room-hotspot.has-alert>span{outline:2px solid rgba(227,96,96,.72);outline-offset:3px}
+.home-os-floorplan--rendered .home-os-floorplan-badge{z-index:4;color:rgba(233,239,237,.62)}
+.home-os-floorplan--rendered .home-os-room-focus{z-index:5;border-color:rgba(255,255,255,.12);background:rgba(13,18,20,.86);color:#eef3f1}
+@media(max-width:1180px){.home-os-floorplan--rendered{min-height:640px}.home-os-room-hotspot small{display:none}}
+@media(max-width:767px){.home-os-floorplan--rendered{min-height:460px}.home-os-plan-toolbar{top:10px;left:10px}.home-os-plan-toolbar button{min-height:38px;padding:0 10px}.home-os-room-hotspot{min-width:54px}.home-os-room-hotspot>span{width:31px;height:31px}.home-os-room-hotspot strong{font-size:10px}.home-os-floorplan--rendered .home-os-room-focus{left:12px;right:12px;bottom:12px;min-width:0}}
