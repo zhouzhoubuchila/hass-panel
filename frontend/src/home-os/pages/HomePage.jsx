@@ -9,6 +9,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import FloorplanPlaceholder from '../floorplan/FloorplanPlaceholder';
 import { buildFloorplanState } from '../floorplan/floorplanBinding';
+import { resolveDPlanConfig } from '../floorplan/proceduralDPlan';
 import useHomeDashboard from '../data/useHomeDashboard';
 import { getTravelAdvice } from '../data/dashboardModel';
 import HomeModeBar from '../components/HomeModeBar';
@@ -44,7 +45,7 @@ export default function HomePage() {
   const zh = language === 'zh';
   const weatherLabel = dashboard.weather ? (weatherNames[dashboard.weather.condition]?.[zh ? 0 : 1] || dashboard.weather.condition) : null;
   const greeting = now.getHours() < 6 ? (zh ? '夜深了' : 'Good night') : now.getHours() < 12 ? (zh ? '早上好' : 'Good morning') : now.getHours() < 18 ? (zh ? '下午好' : 'Good afternoon') : (zh ? '晚上好' : 'Good evening');
-  const floorplanConfig = useMemo(() => dashboard.config?.homeOs?.floorplan || EMPTY_FLOORPLAN_CONFIG, [dashboard.config]);
+  const floorplanConfig = useMemo(() => resolveDPlanConfig(dashboard.config?.homeOs?.floorplan || EMPTY_FLOORPLAN_CONFIG), [dashboard.config]);
   const floorplanState = useMemo(() => buildFloorplanState(floorplanConfig, entities), [floorplanConfig, entities]);
   const devices = useMemo(() => {
     const all = Object.values(entities);
